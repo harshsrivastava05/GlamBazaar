@@ -126,7 +126,7 @@ export async function getProducts(options?: {
     ...(options?.offset && { skip: options.offset }),
   });
 
-  // Transform to match Product interface
+  // Transform to match Product interface - Fix all type issues
   return products.map((product) => ({
     ...product,
     basePrice: Number(product.basePrice),
@@ -135,7 +135,7 @@ export async function getProducts(options?: {
     updatedAt: product.updatedAt.toISOString(),
     images: product.images.map((img) => ({
       ...img,
-      altText: img.altText || `${product.name} image`,
+      altText: img.altText || `${product.name} image`, // Ensure altText is always a string
     })),
     variants: product.variants.map((variant) => ({
       ...variant,
@@ -151,7 +151,6 @@ export async function getProducts(options?: {
   }));
 }
 
-// Also update getProductBySlug with similar transformation
 export async function getProductBySlug(slug: string): Promise<Product | null> {
   const product = await prisma.product.findUnique({
     where: { slug, isActive: true },
@@ -204,7 +203,7 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
     updatedAt: product.updatedAt.toISOString(),
     images: product.images.map((img) => ({
       ...img,
-      altText: img.altText || `${product.name} image`,
+      altText: img.altText || `${product.name} image`, // Ensure altText is always a string
     })),
     variants: product.variants.map((variant) => ({
       ...variant,
@@ -276,10 +275,11 @@ export async function getCartItems(userId: string) {
   });
 }
 
+// Fixed addToCart function to handle optional variantId properly
 export async function addToCart(
   userId: string,
   productId: number,
-  variantId?: number | null,
+  variantId?: number, // Make variantId optional (undefined allowed)
   quantity: number = 1
 ) {
   // Validate product exists and is active
@@ -295,7 +295,7 @@ export async function addToCart(
   }
 
   // If variantId provided, validate it exists
-  if (variantId) {
+  if (variantId !== undefined) {
     const variant = await prisma.productVariant.findFirst({
       where: {
         id: variantId,
@@ -314,18 +314,18 @@ export async function addToCart(
       userId_productId_variantId: {
         userId,
         productId,
-        variantId: variantId || null,
+        variantId: variantId ?? null, // Convert undefined to null for database
       },
     },
     update: {
       quantity: {
         increment: quantity,
- },
+      },
     },
     create: {
       userId,
       productId,
-      variantId: variantId || null,
+      variantId: variantId ?? null, // Convert undefined to null for database
       quantity,
     },
   });

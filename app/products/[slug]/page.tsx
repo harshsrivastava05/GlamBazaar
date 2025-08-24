@@ -4,7 +4,6 @@ import { Suspense } from 'react'
 import { getProductBySlug, getProducts } from '@/lib/db'
 import { Badge } from '@/app/components/ui/badge'
 import { Button } from '@/app/components/ui/button'
-import { Card, CardContent } from '@/app/components/ui/card'
 import ProductGallery from '@/app/components/product/product-gallery'
 import VariantSelector from '@/app/components/product/variant-selector'
 import ProductReviews from '@/app/components/product/product-reviews'
@@ -49,7 +48,7 @@ async function ProductContent({ params }: ProductPageProps) {
           <nav className="flex items-center space-x-2 text-sm text-muted-foreground">
             <span>Home</span>
             <span>/</span>
-            <span>{product.category.name}</span>
+            <span>{product.category?.name}</span>
             <span>/</span>
             <span className="text-foreground">{product.name}</span>
           </nav>
@@ -89,14 +88,20 @@ async function ProductContent({ params }: ProductPageProps) {
             </div>
           )}
 
-          {/* Price */}
+          {/* Price - Fixed the price display logic */}
           <div className="flex items-center gap-4">
-            <span className="text-3xl font-bold">
-              {formatPrice(product.basePrice)}
-            </span>
-            {product.salePrice && (
-              <span className="text-lg text-muted-foreground line-through">
-                {formatPrice(product.salePrice)}
+            {product.salePrice ? (
+              <>
+                <span className="text-3xl font-bold">
+                  {formatPrice(product.salePrice)}
+                </span>
+                <span className="text-lg text-muted-foreground line-through">
+                  {formatPrice(product.basePrice)}
+                </span>
+              </>
+            ) : (
+              <span className="text-3xl font-bold">
+                {formatPrice(product.basePrice)}
               </span>
             )}
             {product.featured && (
