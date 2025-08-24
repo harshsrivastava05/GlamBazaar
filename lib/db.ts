@@ -172,6 +172,7 @@ export async function getProducts(options?: {
     })),
   }));
 }
+
 export async function getProductBySlug(slug: string): Promise<Product | null> {
   const product = await prisma.product.findUnique({
     where: { slug, isActive: true },
@@ -242,6 +243,7 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
     })),
   };
 }
+
 
 export async function getCategories() {
   return await prisma.category.findMany({
@@ -342,46 +344,67 @@ export async function addToCart(
   quantity: number = 1
 ) {
   try {
-    // Create unique constraint key
-    const whereClause = {
-      userId_productId_variantId: {
+    // First, check if item already exists in cart
+    const existingCartItem = await prisma.cartItem.findFirst({
+      where: {
         userId,
         productId,
         variantId: variantId || null,
       },
-    }
+    });
 
-    return await prisma.cartItem.upsert({
-      where: whereClause,
-      update: {
-        quantity: {
-          increment: quantity,
+    if (existingCartItem) {
+      // Update existing item by adding to quantity
+      return await prisma.cartItem.update({
+        where: { id: existingCartItem.id },
+        data: {
+          quantity: existingCartItem.quantity + quantity,
+          updatedAt: new Date(),
         },
-        updatedAt: new Date(),
-      },
-      create: {
-        userId,
-        productId,
-        variantId,
-        quantity,
-      },
-      include: {
-        product: {
-          select: {
-            id: true,
-            name: true,
-            basePrice: true,
+        include: {
+          product: {
+            select: {
+              id: true,
+              name: true,
+              basePrice: true,
+            },
+          },
+          variant: {
+            select: {
+              id: true,
+              sku: true,
+              price: true,
+            },
           },
         },
-        variant: {
-          select: {
-            id: true,
-            sku: true,
-            price: true,
+      });
+    } else {
+      // Create new cart item
+      return await prisma.cartItem.create({
+        data: {
+          userId,
+          productId,
+          variantId: variantId || null,
+          quantity,
+        },
+        include: {
+          product: {
+            select: {
+              id: true,
+              name: true,
+              basePrice: true,
+            },
+          },
+          variant: {
+            select: {
+              id: true,
+              sku: true,
+              price: true,
+            },
           },
         },
-      },
-    })
+      });
+    }
   } catch (error) {
     console.error('Error adding to cart:', error)
     throw new Error('Failed to add item to cart')
@@ -457,7 +480,6 @@ export async function getCartItemCount(userId: string): Promise<number> {
     return 0
   }
 }
-
 // Check if product is in cart
 export async function isProductInCart(
   userId: string, 
