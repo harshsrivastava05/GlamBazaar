@@ -28,6 +28,7 @@ interface CartItem {
     basePrice: number;
     salePrice?: number;
     images: Array<{
+      id: number;
       url: string;
       altText: string;
     }>;
@@ -250,7 +251,7 @@ export default function CartPage() {
           <div className="space-y-4">
             {cartItems.map((item) => {
               const price = item.variant?.price || item.product.basePrice;
-              const image = item.product.images;
+              const primaryImage = item.product.images?.[0];
 
               return (
                 <Card key={item.id}>
@@ -259,8 +260,8 @@ export default function CartPage() {
                       {/* Product Image */}
                       <div className="relative w-20 h-20 flex-shrink-0">
                         <Image
-                          src={image?.url || "/placeholder-product.jpg"}
-                          alt={image?.altText || item.product.name}
+                          src={primaryImage?.url || "/placeholder-product.jpg"}
+                          alt={primaryImage?.altText || item.product.name}
                           fill
                           className="object-cover rounded-md"
                         />

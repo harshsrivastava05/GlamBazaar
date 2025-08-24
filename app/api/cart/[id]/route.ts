@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { updateCartItem, removeCartItem, getCartItems } from '@/lib/db'
+import { prisma } from '@/lib/db'
 
 // PUT /api/cart/[id] - Update cart item quantity
 export async function PUT(

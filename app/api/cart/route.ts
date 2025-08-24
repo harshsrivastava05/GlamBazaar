@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { getCartItems, addToCart, clearCart } from '@/lib/db'
+import { prisma } from '@/lib/db'
 
 // GET /api/cart - Get user's cart items
 export async function GET(request: NextRequest) {
