@@ -13,7 +13,6 @@ export const prisma =
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
-// Product queries
 export async function getProducts(options?: {
   featured?: boolean;
   categoryId?: number;
@@ -23,11 +22,15 @@ export async function getProducts(options?: {
   search?: string;
   sortBy?: "name" | "price" | "created";
   sortOrder?: "asc" | "desc";
+  minPrice?: number;
+  maxPrice?: number;
+  brands?: string[];
 }): Promise<Product[]> {
-  const where = {
+  const where: any = {
     isActive: true,
     ...(options?.featured && { featured: true }),
     ...(options?.categoryId && { categoryId: options.categoryId }),
+    ...(options?.categoryIds && { categoryId: { in: options.categoryIds } }),
     ...(options?.search && {
       OR: [
         { name: { contains: options.search, mode: "insensitive" as const } },
@@ -40,7 +43,22 @@ export async function getProducts(options?: {
         { brand: { contains: options.search, mode: "insensitive" as const } },
       ],
     }),
+    ...(options?.minPrice && { basePrice: { gte: options.minPrice } }),
+    ...(options?.maxPrice && { basePrice: { lte: options.maxPrice } }),
+    ...(options?.brands && options.brands.length > 0 && { brand: { in: options.brands } }),
   };
+
+  // Handle price range filter (both min and max)
+  if (options?.minPrice && options?.maxPrice) {
+    where.basePrice = {
+      gte: options.minPrice,
+      lte: options.maxPrice,
+    };
+  } else if (options?.minPrice) {
+    where.basePrice = { gte: options.minPrice };
+  } else if (options?.maxPrice) {
+    where.basePrice = { lte: options.maxPrice };
+  }
 
   const orderBy = (() => {
     switch (options?.sortBy) {
@@ -154,7 +172,6 @@ export async function getProducts(options?: {
     })),
   }));
 }
-
 export async function getProductBySlug(slug: string): Promise<Product | null> {
   const product = await prisma.product.findUnique({
     where: { slug, isActive: true },
@@ -257,85 +274,211 @@ export async function getUserByEmail(email: string) {
 
 // Cart functions
 export async function getCartItems(userId: string) {
-  return await prisma.cartItem.findMany({
-    where: { userId },
-    include: {
-      product: {
-        include: {
-          images: {
-            where: { isPrimary: true },
-            take: 1,
+  try {
+    return await prisma.cartItem.findMany({
+      where: { userId },
+      include: {
+        product: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            basePrice: true,
+            salePrice: true,
+            isActive: true,
+            images: {
+              where: { isPrimary: true },
+              take: 1,
+              select: {
+                id: true,
+                url: true,
+                altText: true,
+              },
+            },
           },
         },
-      },
-      variant: {
-        include: {
-          variantAttributes: {
-            include: {
-              attribute: true,
-              attributeOption: true,
+        variant: {
+          select: {
+            id: true,
+            sku: true,
+            price: true,
+            stockQuantity: true,
+            isActive: true,
+            variantAttributes: {
+              include: {
+                attribute: {
+                  select: {
+                    id: true,
+                    name: true,
+                    displayName: true,
+                  },
+                },
+                attributeOption: {
+                  select: {
+                    id: true,
+                    value: true,
+                    displayValue: true,
+                    colorHex: true,
+                  },
+                },
+              },
             },
           },
         },
       },
-    },
-  });
+      orderBy: { createdAt: 'desc' },
+    })
+  } catch (error) {
+    console.error('Error fetching cart items:', error)
+    throw new Error('Failed to fetch cart items')
+  }
 }
 
-// Fixed addToCart function to handle optional variantId properly
+// Enhanced addToCart with upsert logic
 export async function addToCart(
-  userId: string,
-  productId: number,
-  variantId: number | null = null, // Change to number | null and default to null
+  userId: string, 
+  productId: number, 
+  variantId?: number, 
   quantity: number = 1
 ) {
-  // Validate product exists and is active
-  const product = await prisma.product.findFirst({
-    where: {
-      id: productId,
-      isActive: true,
-    },
-  });
-
-  if (!product) {
-    throw new Error("Product not found or inactive");
-  }
-
-  // If variantId provided, validate it exists
-  if (variantId !== null) {
-    const variant = await prisma.productVariant.findFirst({
-      where: {
-        id: variantId,
-        productId: productId,
-        isActive: true,
-      },
-    });
-
-    if (!variant) {
-      throw new Error("Variant not found or inactive");
-    }
-  }
-
-  return await prisma.cartItem.upsert({
-    where: {
+  try {
+    // Create unique constraint key
+    const whereClause = {
       userId_productId_variantId: {
         userId,
         productId,
-        variantId: variantId, // Now correctly typed as number | null
+        variantId: variantId || null,
       },
-    },
-    update: {
-      quantity: {
-        increment: quantity,
+    }
+
+    return await prisma.cartItem.upsert({
+      where: whereClause,
+      update: {
+        quantity: {
+          increment: quantity,
+        },
+        updatedAt: new Date(),
       },
-    },
-    create: {
-      userId,
-      productId,
-      variantId: variantId, // Now correctly typed as number | null
-      quantity,
-    },
-  });
+      create: {
+        userId,
+        productId,
+        variantId,
+        quantity,
+      },
+      include: {
+        product: {
+          select: {
+            id: true,
+            name: true,
+            basePrice: true,
+          },
+        },
+        variant: {
+          select: {
+            id: true,
+            sku: true,
+            price: true,
+          },
+        },
+      },
+    })
+  } catch (error) {
+    console.error('Error adding to cart:', error)
+    throw new Error('Failed to add item to cart')
+  }
+}
+
+// Update cart item quantity
+export async function updateCartItem(cartItemId: number, quantity: number) {
+  try {
+    return await prisma.cartItem.update({
+      where: { id: cartItemId },
+      data: { 
+        quantity,
+        updatedAt: new Date(),
+      },
+      include: {
+        product: {
+          select: {
+            id: true,
+            name: true,
+            basePrice: true,
+          },
+        },
+        variant: {
+          select: {
+            id: true,
+            sku: true,
+            price: true,
+          },
+        },
+      },
+    })
+  } catch (error) {
+    console.error('Error updating cart item:', error)
+    throw new Error('Failed to update cart item')
+  }
+}
+
+// Remove single cart item
+export async function removeCartItem(cartItemId: number) {
+  try {
+    return await prisma.cartItem.delete({
+      where: { id: cartItemId },
+    })
+  } catch (error) {
+    console.error('Error removing cart item:', error)
+    throw new Error('Failed to remove cart item')
+  }
+}
+
+// Clear entire user cart
+export async function clearCart(userId: string) {
+  try {
+    return await prisma.cartItem.deleteMany({
+      where: { userId },
+    })
+  } catch (error) {
+    console.error('Error clearing cart:', error)
+    throw new Error('Failed to clear cart')
+  }
+}
+
+// Get cart item count
+export async function getCartItemCount(userId: string): Promise<number> {
+  try {
+    const result = await prisma.cartItem.aggregate({
+      where: { userId },
+      _sum: { quantity: true },
+    })
+    return result._sum.quantity || 0
+  } catch (error) {
+    console.error('Error getting cart count:', error)
+    return 0
+  }
+}
+
+// Check if product is in cart
+export async function isProductInCart(
+  userId: string, 
+  productId: number, 
+  variantId?: number
+): Promise<boolean> {
+  try {
+    const cartItem = await prisma.cartItem.findUnique({
+      where: {
+        userId_productId_variantId: {
+          userId,
+          productId,
+          variantId: variantId || null,
+        },
+      },
+    })
+    return !!cartItem
+  } catch (error) {
+    console.error('Error checking cart item:', error)
+    return false
+  }
 }
 
 // Order functions

@@ -20,24 +20,28 @@ import {
 } from "@/app/components/ui/breadcrumb";
 
 interface CategoryPageProps {
-  params: { slug: string };
-  searchParams: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{
     search?: string;
     sort?: string;
     page?: string;
     minPrice?: string;
     maxPrice?: string;
-    brand?: string[];
-  };
+    brand?: string | string[];
+  }>;
 }
 
 async function CategoryContent({ params, searchParams }: CategoryPageProps) {
-  const page = parseInt(searchParams.page || "1");
+  // Await both params and searchParams before using their properties
+  const resolvedParams = await params;
+  const resolvedSearchParams = await searchParams;
+  
+  const page = parseInt(resolvedSearchParams.page || "1");
   const limit = 12;
   const offset = (page - 1) * limit;
 
   const [category, categories] = await Promise.all([
-    getCategoryBySlug(params.slug),
+    getCategoryBySlug(resolvedParams.slug),
     getCategories(),
   ]);
 
@@ -51,24 +55,32 @@ async function CategoryContent({ params, searchParams }: CategoryPageProps) {
     categoryIds.push(...category.children.map((child) => child.id));
   }
 
+  // Fix the sortBy and sortOrder parsing
+  const sortParts = resolvedSearchParams.sort?.split("_") || [];
+  const sortBy = sortParts[0] as "name" | "price" | "created" | undefined;
+  const sortOrder = sortParts[1] as "asc" | "desc" | undefined;
+
+  // Fix brand parameter handling
+  const brands = Array.isArray(resolvedSearchParams.brand)
+    ? resolvedSearchParams.brand
+    : resolvedSearchParams.brand
+    ? [resolvedSearchParams.brand]
+    : undefined;
+
   const products = await getProducts({
-    search: searchParams.search,
-    categoryIds: categoryIds, // Updated to support multiple categories
+    search: resolvedSearchParams.search,
+    categoryIds: categoryIds,
     limit,
     offset,
-    sortBy: searchParams.sort?.split("_") as "name" | "price" | "created",
-    sortOrder: searchParams.sort?.split("_") as "asc" | "desc",
-    minPrice: searchParams.minPrice
-      ? parseFloat(searchParams.minPrice)
+    sortBy,
+    sortOrder,
+    minPrice: resolvedSearchParams.minPrice
+      ? parseFloat(resolvedSearchParams.minPrice)
       : undefined,
-    maxPrice: searchParams.maxPrice
-      ? parseFloat(searchParams.maxPrice)
+    maxPrice: resolvedSearchParams.maxPrice
+      ? parseFloat(resolvedSearchParams.maxPrice)
       : undefined,
-    brands: Array.isArray(searchParams.brand)
-      ? searchParams.brand
-      : searchParams.brand
-      ? [searchParams.brand]
-      : undefined,
+    brands,
   });
 
   // Get category hero images
@@ -92,7 +104,7 @@ async function CategoryContent({ params, searchParams }: CategoryPageProps) {
   };
 
   const heroImage =
-    categoryImages[params.slug as keyof typeof categoryImages] ||
+    categoryImages[resolvedParams.slug as keyof typeof categoryImages] ||
     categoryImages.jewelry;
 
   return (
@@ -196,8 +208,8 @@ async function CategoryContent({ params, searchParams }: CategoryPageProps) {
             <div>
               <h2 className="text-2xl font-bold">{category.name} Products</h2>
               <p className="text-muted-foreground">
-                {searchParams.search &&
-                  `Results for "${searchParams.search}" in ${category.name} - `}
+                {resolvedSearchParams.search &&
+                  `Results for "${resolvedSearchParams.search}" in ${category.name} • `}
                 {products.length} products found
               </p>
             </div>
@@ -208,13 +220,9 @@ async function CategoryContent({ params, searchParams }: CategoryPageProps) {
           ) : (
             <div className="text-center py-12">
               <div className="mb-4">
-                <Image
-                  src="/images/no-products.svg"
-                  alt="No products found"
-                  width={200}
-                  height={200}
-                  className="mx-auto opacity-50"
-                />
+                <div className="w-32 h-32 mx-auto bg-muted rounded-full flex items-center justify-center">
+                  <span className="text-4xl">📦</span>
+                </div>
               </div>
               <h3 className="text-xl font-medium mb-2">No products found</h3>
               <p className="text-muted-foreground mb-4">
@@ -232,13 +240,13 @@ async function CategoryContent({ params, searchParams }: CategoryPageProps) {
               <div className="flex gap-2">
                 {page > 1 && (
                   <Button variant="outline" asChild>
-                    <Link href={`/category/${params.slug}?page=${page - 1}`}>
+                    <Link href={`/category/${resolvedParams.slug}?page=${page - 1}`}>
                       Previous
                     </Link>
                   </Button>
                 )}
                 <Button variant="outline" asChild>
-                  <Link href={`/category/${params.slug}?page=${page + 1}`}>
+                  <Link href={`/category/${resolvedParams.slug}?page=${page + 1}`}>
                     Next
                   </Link>
                 </Button>
@@ -252,7 +260,8 @@ async function CategoryContent({ params, searchParams }: CategoryPageProps) {
 }
 
 export async function generateMetadata({ params }: CategoryPageProps) {
-  const category = await getCategoryBySlug(params.slug);
+  const resolvedParams = await params;
+  const category = await getCategoryBySlug(resolvedParams.slug);
 
   if (!category) {
     return {
