@@ -7,30 +7,7 @@ import { Card, CardContent } from '@/app/components/ui/card'
 import { Badge } from '@/app/components/ui/badge'
 import { Button } from '@/app/components/ui/button'
 import { formatPrice } from '@/lib/utils'
-
-interface Product {
-  id: number
-  name: string
-  slug: string
-  description: string
-  basePrice: number
-  salePrice?: number
-  brand?: string
-  featured: boolean
-  images: Array<{
-    url: string
-    alt: string
-    isPrimary: boolean
-  }>
-  reviews: Array<{
-    rating: number
-  }>
-  variants: Array<{
-    id: number
-    price: number
-    stockQuantity: number
-  }>
-}
+import { Product } from '@/lib/types'
 
 interface ProductCardProps {
   product: Product
@@ -38,7 +15,7 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, className }: ProductCardProps) {
-  const primaryImage = product.images.find(img => img.isPrimary) || product.images[0]
+  const primaryImage = product.images.find(img => img.isPrimary) || product.images
   const averageRating = product.reviews.length > 0 
     ? product.reviews.reduce((sum, review) => sum + review.rating, 0) / product.reviews.length 
     : 0

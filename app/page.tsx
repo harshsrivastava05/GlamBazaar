@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+
 import { getProducts } from '@/lib/db'
 import ProductGrid from './components/product/product-grid'
 import { Button } from './components/ui/button'
@@ -9,8 +10,17 @@ import { Badge } from './components/ui/badge'
 import { Gem, Sparkles, Truck, Shield, Star, Users } from 'lucide-react'
 
 async function FeaturedProducts() {
-  const products = await getProducts({ featured: true, limit: 6 })
-  return <ProductGrid products={products} />
+  try {
+    const products = await getProducts({ featured: true, limit: 6 })
+    return <ProductGrid products={products} />
+  } catch (error) {
+    console.error('Failed to load featured products:', error)
+    return (
+      <div className="text-center py-8">
+        <p className="text-muted-foreground">Failed to load featured products</p>
+      </div>
+    )
+  }
 }
 
 export default function HomePage() {

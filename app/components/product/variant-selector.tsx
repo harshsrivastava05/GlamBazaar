@@ -103,7 +103,7 @@ export default function VariantSelector({ variants, onVariantChange }: VariantSe
 
   // If there's only one variant, don't show selector
   if (variants.length === 1) {
-    const variant = variants
+    const variant = variants[0]
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-4">

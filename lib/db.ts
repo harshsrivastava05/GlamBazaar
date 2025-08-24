@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { Product } from "./types";
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -21,7 +22,7 @@ export async function getProducts(options?: {
   search?: string;
   sortBy?: "name" | "price" | "created";
   sortOrder?: "asc" | "desc";
-}) {
+}): Promise<Product[]> {
   const where = {
     isActive: true,
     ...(options?.featured && { featured: true }),
@@ -53,42 +54,117 @@ export async function getProducts(options?: {
     }
   })();
 
-  return await prisma.product.findMany({
+  const products = await prisma.product.findMany({
     where,
     include: {
-      category: true,
+      category: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          description: true,
+          parentId: true,
+        },
+      },
       images: {
         orderBy: { sortOrder: "asc" },
-        take: 1,
+        select: {
+          id: true,
+          url: true,
+          altText: true,
+          isPrimary: true,
+          sortOrder: true,
+        },
       },
       variants: {
         where: { isActive: true },
         include: {
           variantAttributes: {
             include: {
-              attribute: true,
-              attributeOption: true,
+              attribute: {
+                select: {
+                  id: true,
+                  name: true,
+                  type: true,
+                  displayName: true,
+                },
+              },
+              attributeOption: {
+                select: {
+                  id: true,
+                  value: true,
+                  displayValue: true,
+                  colorHex: true,
+                },
+              },
             },
           },
         },
       },
       reviews: {
+        where: { isApproved: true },
         select: {
+          id: true,
           rating: true,
+          title: true,
+          comment: true,
+          verifiedPurchase: true,
+          isApproved: true,
+          createdAt: true,
+          user: {
+            select: {
+              name: true,
+              image: true,
+            },
+          },
         },
+        take: 5, // Limit reviews for performance
       },
     },
     orderBy,
     ...(options?.limit && { take: options.limit }),
     ...(options?.offset && { skip: options.offset }),
   });
+
+  // Transform to match Product interface
+  return products.map((product) => ({
+    ...product,
+    basePrice: Number(product.basePrice),
+    salePrice: product.salePrice ? Number(product.salePrice) : null,
+    createdAt: product.createdAt.toISOString(),
+    updatedAt: product.updatedAt.toISOString(),
+    images: product.images.map((img) => ({
+      ...img,
+      altText: img.altText || `${product.name} image`,
+    })),
+    variants: product.variants.map((variant) => ({
+      ...variant,
+      price: Number(variant.price),
+      compareAtPrice: variant.compareAtPrice
+        ? Number(variant.compareAtPrice)
+        : null,
+    })),
+    reviews: product.reviews.map((review) => ({
+      ...review,
+      createdAt: review.createdAt.toISOString(),
+    })),
+  }));
 }
 
-export async function getProductBySlug(slug: string) {
-  return await prisma.product.findUnique({
+// Also update getProductBySlug with similar transformation
+export async function getProductBySlug(slug: string): Promise<Product | null> {
+  const product = await prisma.product.findUnique({
     where: { slug, isActive: true },
     include: {
-      category: true,
+      category: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          description: true,
+          parentId: true,
+        },
+      },
       images: {
         orderBy: { sortOrder: "asc" },
       },
@@ -117,6 +193,31 @@ export async function getProductBySlug(slug: string) {
       },
     },
   });
+
+  if (!product) return null;
+
+  return {
+    ...product,
+    basePrice: Number(product.basePrice),
+    salePrice: product.salePrice ? Number(product.salePrice) : null,
+    createdAt: product.createdAt.toISOString(),
+    updatedAt: product.updatedAt.toISOString(),
+    images: product.images.map((img) => ({
+      ...img,
+      altText: img.altText || `${product.name} image`,
+    })),
+    variants: product.variants.map((variant) => ({
+      ...variant,
+      price: Number(variant.price),
+      compareAtPrice: variant.compareAtPrice
+        ? Number(variant.compareAtPrice)
+        : null,
+    })),
+    reviews: product.reviews.map((review) => ({
+      ...review,
+      createdAt: review.createdAt.toISOString(),
+    })),
+  };
 }
 
 export async function getCategories() {
@@ -178,26 +279,53 @@ export async function getCartItems(userId: string) {
 export async function addToCart(
   userId: string,
   productId: number,
-  variantId?: number,
+  variantId?: number | null,
   quantity: number = 1
 ) {
+  // Validate product exists and is active
+  const product = await prisma.product.findFirst({
+    where: {
+      id: productId,
+      isActive: true,
+    },
+  });
+
+  if (!product) {
+    throw new Error("Product not found or inactive");
+  }
+
+  // If variantId provided, validate it exists
+  if (variantId) {
+    const variant = await prisma.productVariant.findFirst({
+      where: {
+        id: variantId,
+        productId: productId,
+        isActive: true,
+      },
+    });
+
+    if (!variant) {
+      throw new Error("Variant not found or inactive");
+    }
+  }
+
   return await prisma.cartItem.upsert({
     where: {
       userId_productId_variantId: {
         userId,
         productId,
-        variantId,
+        variantId: variantId || null,
       },
     },
     update: {
       quantity: {
         increment: quantity,
-      },
+ },
     },
     create: {
       userId,
       productId,
-      variantId,
+      variantId: variantId || null,
       quantity,
     },
   });
