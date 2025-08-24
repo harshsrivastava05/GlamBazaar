@@ -1,30 +1,7 @@
 import { Suspense } from 'react'
 import ProductCard from './product-card'
 import { Card, CardContent } from '@/app/components/ui/card'
-
-interface Product {
-  id: number
-  name: string
-  slug: string
-  description: string
-  basePrice: number
-  salePrice?: number
-  brand?: string
-  featured: boolean
-  images: Array<{
-    url: string
-    alt: string
-    isPrimary: boolean
-  }>
-  reviews: Array<{
-    rating: number
-  }>
-  variants: Array<{
-    id: number
-    price: number
-    stockQuantity: number
-  }>
-}
+import { Product } from '@/lib/types' // Import the correct Product type
 
 interface ProductGridProps {
   products: Product[]

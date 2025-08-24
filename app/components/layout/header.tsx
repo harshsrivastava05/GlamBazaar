@@ -49,9 +49,9 @@ export default function Header() {
     <>
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container">
-          <div className="flex h-16 items-center justify-between">
+          <div className="flex h-16 items-center justify-between gap-4">
             {/* Logo */}
-            <div className="flex items-center">
+            <div className="flex items-center shrink-0">
               <Link href="/" className="flex items-center space-x-2">
                 <Gem className="h-6 w-6 text-primary" />
                 <span className="text-xl font-bold text-foreground">GlamBazar</span>
@@ -64,7 +64,7 @@ export default function Header() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                  className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap"
                 >
                   {item.name}
                 </Link>
@@ -72,7 +72,7 @@ export default function Header() {
             </nav>
 
             {/* Search */}
-            <div className="hidden md:flex flex-1 justify-center px-6 lg:px-8">
+            <div className="hidden md:flex flex-1 justify-center px-4 lg:px-6">
               <div className="w-full max-w-lg">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -87,32 +87,42 @@ export default function Header() {
             </div>
 
             {/* Right Side Actions */}
-            <div className="flex items-center space-x-2 lg:space-x-4">
+            <div className="flex items-center space-x-1 sm:space-x-2 shrink-0">
               {/* Mobile Search */}
               <Button
                 variant="ghost"
                 size="icon"
-                className="md:hidden"
+                className="md:hidden h-9 w-9"
                 onClick={() => setIsSearchOpen(!isSearchOpen)}
               >
-                <Search className="h-5 w-5" />
+                <Search className="h-4 w-4" />
                 <span className="sr-only">Search</span>
               </Button>
 
               {/* Admin Link - Only show for authenticated users */}
               {session && (
-                <Button variant="ghost" size="sm" asChild>
-                  <Link href="/admin" className="hidden sm:flex items-center">
-                    <Shield className="h-4 w-4 mr-2" />
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  asChild
+                  className="hidden sm:flex items-center text-foreground hover:text-foreground bg-transparent hover:bg-accent"
+                >
+                  <Link href="/admin" className="flex items-center">
+                    <Shield className="h-4 w-4 mr-1.5" />
                     Admin
                   </Link>
                 </Button>
               )}
 
               {/* Cart */}
-              <Button variant="ghost" size="icon" className="relative" asChild>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="relative h-9 w-9 text-foreground hover:text-foreground bg-transparent hover:bg-accent" 
+                asChild
+              >
                 <Link href="/cart">
-                  <ShoppingCart className="h-5 w-5" />
+                  <ShoppingCart className="h-4 w-4" />
                   {cartCount > 0 && (
                     <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 text-xs">
                       {cartCount}
@@ -128,8 +138,12 @@ export default function Header() {
               ) : session ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                      <User className="h-5 w-5" />
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-9 w-9 text-foreground hover:text-foreground bg-transparent hover:bg-accent"
+                    >
+                      <User className="h-4 w-4" />
                       <span className="sr-only">User menu</span>
                     </Button>
                   </DropdownMenuTrigger>
@@ -169,10 +183,18 @@ export default function Header() {
                 </DropdownMenu>
               ) : (
                 <div className="hidden sm:flex items-center space-x-2">
-                  <Button variant="ghost" asChild>
+                  <Button 
+                    variant="ghost" 
+                    asChild 
+                    className="text-foreground hover:text-foreground bg-transparent hover:bg-accent"
+                  >
                     <Link href="/login">Sign In</Link>
                   </Button>
-                  <Button size="sm" asChild>
+                  <Button 
+                    size="sm" 
+                    asChild
+                    className="bg-primary text-primary-foreground hover:bg-primary/90"
+                  >
                     <Link href="/register">Sign Up</Link>
                   </Button>
                 </div>
@@ -182,13 +204,13 @@ export default function Header() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="md:hidden"
+                className="md:hidden h-9 w-9 text-foreground hover:text-foreground bg-transparent hover:bg-accent"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               >
                 {isMobileMenuOpen ? (
-                  <X className="h-5 w-5" />
+                  <X className="h-4 w-4" />
                 ) : (
-                  <Menu className="h-5 w-5" />
+                  <Menu className="h-4 w-4" />
                 )}
                 <span className="sr-only">Toggle menu</span>
               </Button>

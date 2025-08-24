@@ -8,22 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/ca
 import { Badge } from '@/app/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/app/components/ui/avatar'
 import { formatDate } from '@/lib/utils'
-
-interface ReviewUser {
-  name: string
-  image?: string
-}
-
-interface Review {
-  id: number
-  rating: number
-  title?: string
-  comment?: string
-  verifiedPurchase: boolean
-  isApproved: boolean
-  createdAt: string
-  user: ReviewUser
-}
+import { Review } from '@/lib/types'
 
 interface ProductReviewsProps {
   reviews: Review[]
@@ -221,15 +206,15 @@ export default function ProductReviews({ reviews, productId }: ProductReviewsPro
                 <div key={review.id} className="border-b border-border pb-6 last:border-0">
                   <div className="flex items-start gap-4">
                     <Avatar className="h-10 w-10">
-                      <AvatarImage src={review.user.image} />
+                      <AvatarImage src={review.user.image || undefined} />
                       <AvatarFallback>
-                        {review.user.name.charAt(0).toUpperCase()}
+                        {(review.user.name || 'Anonymous').charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
 
                     <div className="flex-1 space-y-2">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium">{review.user.name}</span>
+                        <span className="font-medium">{review.user.name || 'Anonymous'}</span>
                         {review.verifiedPurchase && (
                           <Badge variant="secondary" className="text-xs">
                             Verified Purchase

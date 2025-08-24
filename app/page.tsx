@@ -67,22 +67,22 @@ export default function HomePage() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-r from-primary/10 via-background to-primary/5 py-20 lg:py-32">
+      <section className="relative bg-gradient-to-r from-primary/10 via-background to-primary/5 py-12 lg:py-20">
         <div className="container">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="flex flex-col space-y-8">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+            <div className="flex flex-col space-y-6 lg:space-y-8">
               <div className="space-y-4">
                 <Badge variant="secondary" className="w-fit">
                   <Sparkles className="w-4 h-4 mr-2" />
                   Premium Collection
                 </Badge>
-                <h1 className="text-4xl lg:text-6xl font-bold tracking-tight">
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight">
                   Discover 
                   <span className="text-primary"> Luxury</span>
                   <br />
                   Jewelry & Cosmetics
                 </h1>
-                <p className="text-xl text-muted-foreground max-w-lg">
+                <p className="text-lg lg:text-xl text-muted-foreground max-w-lg">
                   Explore our curated collection of premium jewelry and cosmetics with same-day delivery in Kanpur.
                 </p>
               </div>
@@ -118,22 +118,22 @@ export default function HomePage() {
       </section>
 
       {/* Categories Section */}
-      <section className="py-16 bg-muted/30">
+      <section className="py-12 lg:py-16 bg-muted/30">
         <div className="container">
-          <div className="text-center space-y-4 mb-12">
-            <h2 className="text-3xl lg:text-4xl font-bold tracking-tight">
+          <div className="text-center space-y-4 mb-8 lg:mb-12">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">
               Shop by Category
             </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-base lg:text-lg text-muted-foreground max-w-2xl mx-auto">
               Discover our carefully curated collections of premium jewelry and cosmetics
             </p>
           </div>
           
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-2 gap-6 lg:gap-8">
             {categories.map((category) => (
               <Card key={category.id} className="group cursor-pointer card-shadow overflow-hidden">
                 <Link href={`/category/${category.slug}`}>
-                  <div className="relative h-64">
+                  <div className="relative h-48 sm:h-56 lg:h-64">
                     <Image
                       src={category.image}
                       alt={category.name}
@@ -141,9 +141,9 @@ export default function HomePage() {
                       className="object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                     <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors duration-300" />
-                    <div className="absolute bottom-6 left-6 text-white">
-                      <h3 className="text-2xl font-bold mb-2">{category.name}</h3>
-                      <p className="text-white/90">{category.description}</p>
+                    <div className="absolute bottom-4 lg:bottom-6 left-4 lg:left-6 text-white">
+                      <h3 className="text-xl lg:text-2xl font-bold mb-2">{category.name}</h3>
+                      <p className="text-white/90 text-sm lg:text-base">{category.description}</p>
                     </div>
                   </div>
                 </Link>
@@ -154,13 +154,13 @@ export default function HomePage() {
       </section>
 
       {/* Featured Products Section */}
-      <section className="py-16">
+      <section className="py-12 lg:py-16">
         <div className="container">
-          <div className="text-center space-y-4 mb-12">
-            <h2 className="text-3xl lg:text-4xl font-bold tracking-tight">
+          <div className="text-center space-y-4 mb-8 lg:mb-12">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">
               Featured Products
             </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-base lg:text-lg text-muted-foreground max-w-2xl mx-auto">
               Handpicked premium products from our exclusive collection
             </p>
           </div>
@@ -181,7 +181,7 @@ export default function HomePage() {
             <FeaturedProducts />
           </Suspense>
 
-          <div className="text-center mt-12">
+          <div className="text-center mt-8 lg:mt-12">
             <Button size="lg" variant="outline" asChild>
               <Link href="/products">
                 View All Products
@@ -192,25 +192,25 @@ export default function HomePage() {
       </section>
 
       {/* Features Section */}
-      <section className="py-16 bg-muted/30">
+      <section className="py-12 lg:py-16 bg-muted/30">
         <div className="container">
-          <div className="text-center space-y-4 mb-12">
-            <h2 className="text-3xl lg:text-4xl font-bold tracking-tight">
+          <div className="text-center space-y-4 mb-8 lg:mb-12">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">
               Why Choose GlamBazar?
             </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-base lg:text-lg text-muted-foreground max-w-2xl mx-auto">
               We're committed to providing the best shopping experience
             </p>
           </div>
           
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
             {features.map((feature, index) => (
               <Card key={index} className="text-center card-shadow">
-                <CardContent className="p-6 space-y-4">
+                <CardContent className="p-4 lg:p-6 space-y-4">
                   <div className="w-12 h-12 mx-auto bg-primary/10 rounded-lg flex items-center justify-center">
                     <feature.icon className="w-6 h-6 text-primary" />
                   </div>
-                  <h3 className="text-lg font-semibold">{feature.title}</h3>
+                  <h3 className="text-base lg:text-lg font-semibold">{feature.title}</h3>
                   <p className="text-muted-foreground text-sm leading-relaxed">
                     {feature.description}
                   </p>

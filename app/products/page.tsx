@@ -4,27 +4,29 @@ import ProductGrid, { ProductGridSkeleton } from '@/app/components/product/produ
 import ProductFilters from '@/app/components/product/product-filters'
 
 interface ProductsPageProps {
-  searchParams: {
+  searchParams: Promise<{
     category?: string
     search?: string
     sort?: string
     page?: string
-  }
+  }>
 }
 
 async function ProductsContent({ searchParams }: ProductsPageProps) {
-  const page = parseInt(searchParams.page || '1')
+  // Await searchParams before using its properties
+  const params = await searchParams
+  const page = parseInt(params.page || '1')
   const limit = 12
   const offset = (page - 1) * limit
 
   const [products, categories] = await Promise.all([
     getProducts({
-      search: searchParams.search,
-      categoryId: searchParams.category ? parseInt(searchParams.category) : undefined,
+      search: params.search,
+      categoryId: params.category ? parseInt(params.category) : undefined,
       limit,
       offset,
-      sortBy: searchParams.sort?.split('_')[0] as 'name' | 'price' | 'created',
-      sortOrder: searchParams.sort?.split('_')[1] as 'asc' | 'desc',
+      sortBy: params.sort?.split('_')[0] as 'name' | 'price' | 'created',
+      sortOrder: params.sort?.split('_')[1] as 'asc' | 'desc',
     }),
     getCategories(),
   ])
@@ -39,7 +41,7 @@ async function ProductsContent({ searchParams }: ProductsPageProps) {
           <div>
             <h1 className="text-2xl font-bold">Products</h1>
             <p className="text-muted-foreground">
-              {searchParams.search && `Results for "${searchParams.search}"`}
+              {params.search && `Results for "${params.search}" • `}
               {products.length} products found
             </p>
           </div>

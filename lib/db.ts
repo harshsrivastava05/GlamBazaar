@@ -17,6 +17,7 @@ if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 export async function getProducts(options?: {
   featured?: boolean;
   categoryId?: number;
+  categoryIds?: number[];
   limit?: number;
   offset?: number;
   search?: string;
@@ -130,22 +131,25 @@ export async function getProducts(options?: {
   return products.map((product) => ({
     ...product,
     basePrice: Number(product.basePrice),
-    salePrice: product.salePrice ? Number(product.salePrice) : null,
+    salePrice: product.salePrice ? Number(product.salePrice) : undefined, // Convert null to undefined
     createdAt: product.createdAt.toISOString(),
     updatedAt: product.updatedAt.toISOString(),
     images: product.images.map((img) => ({
       ...img,
       altText: img.altText || `${product.name} image`, // Ensure altText is always a string
+      alt: img.altText || `${product.name} image`, // Add alt for compatibility with related-products component
     })),
     variants: product.variants.map((variant) => ({
       ...variant,
       price: Number(variant.price),
       compareAtPrice: variant.compareAtPrice
         ? Number(variant.compareAtPrice)
-        : null,
+        : undefined, // Convert null to undefined
     })),
     reviews: product.reviews.map((review) => ({
       ...review,
+      title: review.title ?? undefined, // Convert null to undefined
+      comment: review.comment ?? undefined, // Convert null to undefined
       createdAt: review.createdAt.toISOString(),
     })),
   }));
@@ -198,22 +202,25 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
   return {
     ...product,
     basePrice: Number(product.basePrice),
-    salePrice: product.salePrice ? Number(product.salePrice) : null,
+    salePrice: product.salePrice ? Number(product.salePrice) : undefined, // Convert null to undefined
     createdAt: product.createdAt.toISOString(),
     updatedAt: product.updatedAt.toISOString(),
     images: product.images.map((img) => ({
       ...img,
       altText: img.altText || `${product.name} image`, // Ensure altText is always a string
+      alt: img.altText || `${product.name} image`, // Add alt for compatibility with related-products component
     })),
     variants: product.variants.map((variant) => ({
       ...variant,
       price: Number(variant.price),
       compareAtPrice: variant.compareAtPrice
         ? Number(variant.compareAtPrice)
-        : null,
+        : undefined, // Convert null to undefined
     })),
     reviews: product.reviews.map((review) => ({
       ...review,
+      title: review.title ?? undefined, // Convert null to undefined
+      comment: review.comment ?? undefined, // Convert null to undefined
       createdAt: review.createdAt.toISOString(),
     })),
   };
@@ -279,7 +286,7 @@ export async function getCartItems(userId: string) {
 export async function addToCart(
   userId: string,
   productId: number,
-  variantId?: number, // Make variantId optional (undefined allowed)
+  variantId: number | null = null, // Change to number | null and default to null
   quantity: number = 1
 ) {
   // Validate product exists and is active
@@ -295,7 +302,7 @@ export async function addToCart(
   }
 
   // If variantId provided, validate it exists
-  if (variantId !== undefined) {
+  if (variantId !== null) {
     const variant = await prisma.productVariant.findFirst({
       where: {
         id: variantId,
@@ -314,7 +321,7 @@ export async function addToCart(
       userId_productId_variantId: {
         userId,
         productId,
-        variantId: variantId ?? null, // Convert undefined to null for database
+        variantId: variantId, // Now correctly typed as number | null
       },
     },
     update: {
@@ -325,7 +332,7 @@ export async function addToCart(
     create: {
       userId,
       productId,
-      variantId: variantId ?? null, // Convert undefined to null for database
+      variantId: variantId, // Now correctly typed as number | null
       quantity,
     },
   });
@@ -344,6 +351,31 @@ export async function createOrder(orderData: any) {
       },
     },
   });
+}
+
+export async function getCategoryBySlug(slug: string) {
+  return await prisma.category.findUnique({
+    where: { slug, isActive: true },
+    include: {
+      parent: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+        },
+      },
+      children: {
+        where: { isActive: true },
+        orderBy: { sortOrder: 'asc' },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          description: true,
+        },
+      },
+    },
+  })
 }
 
 export async function getOrdersByUser(userId: string) {

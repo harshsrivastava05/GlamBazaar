@@ -6,38 +6,7 @@ import { Badge } from '@/app/components/ui/badge'
 import { Button } from '@/app/components/ui/button'
 import { cn } from '@/lib/utils'
 import { formatPrice } from '@/lib/utils'
-
-interface AttributeOption {
-  id: number
-  value: string
-  displayValue: string
-  colorHex?: string
-}
-
-interface Attribute {
-  id: number
-  name: string
-  type: string
-  displayName: string
-}
-
-interface VariantAttribute {
-  id: number
-  attributeId: number
-  attributeOptionId: number
-  attribute: Attribute
-  attributeOption: AttributeOption
-}
-
-interface ProductVariant {
-  id: number
-  sku: string
-  price: number
-  compareAtPrice?: number
-  stockQuantity: number
-  isActive: boolean
-  variantAttributes: VariantAttribute[]
-}
+import { ProductVariant } from '@/lib/types'
 
 interface VariantSelectorProps {
   variants: ProductVariant[]
@@ -60,7 +29,7 @@ export default function VariantSelector({ variants, onVariantChange }: VariantSe
       groups[attribute.name].options.add(attributeOption)
     })
     return groups
-  }, {} as Record<string, { attribute: Attribute; options: Set<AttributeOption> }>)
+  }, {} as Record<string, { attribute: ProductVariant['variantAttributes'][0]['attribute']; options: Set<ProductVariant['variantAttributes'][0]['attributeOption']> }>)
 
   // Convert sets to arrays for easier iteration
   const attributeGroupsArray = Object.entries(attributeGroups).map(([name, group]) => ({

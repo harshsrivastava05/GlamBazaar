@@ -1,100 +1,114 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { Check, Filter, X } from 'lucide-react'
-import { Button } from '@/app/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
-import { Badge } from '@/app/components/ui/badge'
-import { Input } from '@/app/components/ui/input'
-import { cn } from '@/lib/utils'
+import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Check, Filter, X } from "lucide-react";
+import { Button } from "@/app/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/app/components/ui/card";
+import { Badge } from "@/app/components/ui/badge";
+import { Input } from "@/app/components/ui/input";
+import { cn } from "@/lib/utils";
 
 interface Category {
-  id: number
-  name: string
-  slug: string
-  children?: Category[]
+  id: number;
+  name: string;
+  slug: string;
+  children?: Category[];
 }
 
 interface ProductFiltersProps {
-  categories: Category[]
+  categories: Category[];
+  currentCategoryId?: number; // Add this prop to highlight current category
 }
 
-export default function ProductFilters({ categories }: ProductFiltersProps) {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  
-  const [isOpen, setIsOpen] = useState(false)
-  const [priceRange, setPriceRange] = useState({
-    min: searchParams.get('minPrice') || '',
-    max: searchParams.get('maxPrice') || ''
-  })
+export default function ProductFilters({
+  categories,
+  currentCategoryId,
+}: ProductFiltersProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
-  const selectedCategory = searchParams.get('category')
-  const selectedSort = searchParams.get('sort') || 'created_desc'
+  const [isOpen, setIsOpen] = useState(false);
+  const [priceRange, setPriceRange] = useState({
+    min: searchParams.get("minPrice") || "",
+    max: searchParams.get("maxPrice") || "",
+  });
+
+  const selectedCategory =
+    searchParams.get("category") || currentCategoryId?.toString();
+  const selectedSort = searchParams.get("sort") || "created_desc";
 
   const priceRanges = [
-    { label: 'Under ₹1,000', min: 0, max: 1000 },
-    { label: '₹1,000 - ₹5,000', min: 1000, max: 5000 },
-    { label: '₹5,000 - ₹10,000', min: 5000, max: 10000 },
-    { label: '₹10,000 - ₹25,000', min: 10000, max: 25000 },
-    { label: 'Above ₹25,000', min: 25000, max: null },
-  ]
+    { label: "Under ₹1,000", min: 0, max: 1000 },
+    { label: "₹1,000 - ₹5,000", min: 1000, max: 5000 },
+    { label: "₹5,000 - ₹10,000", min: 5000, max: 10000 },
+    { label: "₹10,000 - ₹25,000", min: 10000, max: 25000 },
+    { label: "Above ₹25,000", min: 25000, max: null },
+  ];
 
   const sortOptions = [
-    { value: 'created_desc', label: 'Newest First' },
-    { value: 'created_asc', label: 'Oldest First' },
-    { value: 'price_asc', label: 'Price: Low to High' },
-    { value: 'price_desc', label: 'Price: High to Low' },
-    { value: 'name_asc', label: 'Name: A to Z' },
-    { value: 'name_desc', label: 'Name: Z to A' },
-  ]
+    { value: "created_desc", label: "Newest First" },
+    { value: "created_asc", label: "Oldest First" },
+    { value: "price_asc", label: "Price: Low to High" },
+    { value: "price_desc", label: "Price: High to Low" },
+    { value: "name_asc", label: "Name: A to Z" },
+    { value: "name_desc", label: "Name: Z to A" },
+  ];
 
   const brands = [
-    'Tiffany & Co',
-    'Cartier',
-    'Chanel',
-    'Charlotte Tilbury',
-    'Mikimoto',
-    'Harry Winston',
-  ]
+    "Tiffany & Co",
+    "Cartier",
+    "Chanel",
+    "Charlotte Tilbury",
+    "Mikimoto",
+    "Harry Winston",
+  ];
 
   const updateFilter = (key: string, value: string | null) => {
-    const params = new URLSearchParams(searchParams.toString())
-    
+    const params = new URLSearchParams(searchParams.toString());
+
     if (value) {
-      params.set(key, value)
+      params.set(key, value);
     } else {
-      params.delete(key)
+      params.delete(key);
     }
-    
-    router.push(`/products?${params.toString()}`)
-  }
+
+    // Use current pathname to maintain category context
+    const currentPath = window.location.pathname;
+    router.push(`${currentPath}?${params.toString()}`);
+  };
 
   const updatePriceFilter = () => {
-    const params = new URLSearchParams(searchParams.toString())
-    
+    const params = new URLSearchParams(searchParams.toString());
+
     if (priceRange.min) {
-      params.set('minPrice', priceRange.min)
+      params.set("minPrice", priceRange.min);
     } else {
-      params.delete('minPrice')
+      params.delete("minPrice");
     }
-    
+
     if (priceRange.max) {
-      params.set('maxPrice', priceRange.max)
+      params.set("maxPrice", priceRange.max);
     } else {
-      params.delete('maxPrice')
+      params.delete("maxPrice");
     }
-    
-    router.push(`/products?${params.toString()}`)
-  }
+
+    const currentPath = window.location.pathname;
+    router.push(`${currentPath}?${params.toString()}`);
+  };
 
   const clearFilters = () => {
-    setPriceRange({ min: '', max: '' })
-    router.push('/products')
-  }
+    setPriceRange({ min: "", max: "" });
+    const currentPath = window.location.pathname;
+    router.push(currentPath);
+  };
 
-  const hasActiveFilters = searchParams.toString() !== ''
+  const hasActiveFilters = searchParams.toString() !== "";
 
   return (
     <>
@@ -116,11 +130,7 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
       </div>
 
       {/* Filters Panel */}
-      <div className={cn(
-        'space-y-6',
-        'lg:block',
-        isOpen ? 'block' : 'hidden'
-      )}>
+      <div className={cn("space-y-6", "lg:block", isOpen ? "block" : "hidden")}>
         {/* Clear Filters */}
         {hasActiveFilters && (
           <div className="flex items-center justify-between">
@@ -153,7 +163,7 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
                   name="sort"
                   value={option.value}
                   checked={selectedSort === option.value}
-                  onChange={(e) => updateFilter('sort', e.target.value)}
+                  onChange={(e) => updateFilter("sort", e.target.value)}
                   className="w-4 h-4 text-primary"
                 />
                 <span className="text-sm">{option.label}</span>
@@ -162,50 +172,57 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
           </CardContent>
         </Card>
 
-        {/* Categories */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Categories</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <button
-              onClick={() => updateFilter('category', null)}
-              className={cn(
-                'block w-full text-left px-2 py-1 text-sm rounded hover:bg-muted',
-                !selectedCategory && 'bg-primary/10 text-primary font-medium'
-              )}
-            >
-              All Categories
-            </button>
-            {categories.map((category) => (
-              <div key={category.id}>
-                <button
-                  onClick={() => updateFilter('category', category.id.toString())}
-                  className={cn(
-                    'block w-full text-left px-2 py-1 text-sm rounded hover:bg-muted',
-                    selectedCategory === category.id.toString() && 
-                    'bg-primary/10 text-primary font-medium'
-                  )}
-                >
-                  {category.name}
-                </button>
-                {category.children && category.children.map((subcategory) => (
+        {/* Only show category filter if not on a category page */}
+        {!currentCategoryId && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Categories</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <button
+                onClick={() => updateFilter("category", null)}
+                className={cn(
+                  "block w-full text-left px-2 py-1 text-sm rounded hover:bg-muted",
+                  !selectedCategory && "bg-primary/10 text-primary font-medium"
+                )}
+              >
+                All Categories
+              </button>
+              {categories.map((category) => (
+                <div key={category.id}>
                   <button
-                    key={subcategory.id}
-                    onClick={() => updateFilter('category', subcategory.id.toString())}
+                    onClick={() =>
+                      updateFilter("category", category.id.toString())
+                    }
                     className={cn(
-                      'block w-full text-left px-4 py-1 text-sm rounded hover:bg-muted',
-                      selectedCategory === subcategory.id.toString() && 
-                      'bg-primary/10 text-primary font-medium'
+                      "block w-full text-left px-2 py-1 text-sm rounded hover:bg-muted",
+                      selectedCategory === category.id.toString() &&
+                        "bg-primary/10 text-primary font-medium"
                     )}
                   >
-                    {subcategory.name}
+                    {category.name}
                   </button>
-                ))}
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+                  {category.children &&
+                    category.children.map((subcategory) => (
+                      <button
+                        key={subcategory.id}
+                        onClick={() =>
+                          updateFilter("category", subcategory.id.toString())
+                        }
+                        className={cn(
+                          "block w-full text-left px-4 py-1 text-sm rounded hover:bg-muted",
+                          selectedCategory === subcategory.id.toString() &&
+                            "bg-primary/10 text-primary font-medium"
+                        )}
+                      >
+                        {subcategory.name}
+                      </button>
+                    ))}
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Price Range */}
         <Card>
@@ -221,16 +238,17 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
                   onClick={() => {
                     setPriceRange({
                       min: range.min.toString(),
-                      max: range.max ? range.max.toString() : ''
-                    })
-                    const params = new URLSearchParams(searchParams.toString())
-                    params.set('minPrice', range.min.toString())
+                      max: range.max ? range.max.toString() : "",
+                    });
+                    const params = new URLSearchParams(searchParams.toString());
+                    params.set("minPrice", range.min.toString());
                     if (range.max) {
-                      params.set('maxPrice', range.max.toString())
+                      params.set("maxPrice", range.max.toString());
                     } else {
-                      params.delete('maxPrice')
+                      params.delete("maxPrice");
                     }
-                    router.push(`/products?${params.toString()}`)
+                    const currentPath = window.location.pathname;
+                    router.push(`${currentPath}?${params.toString()}`);
                   }}
                   className="block w-full text-left px-2 py-1 text-sm rounded hover:bg-muted"
                 >
@@ -247,7 +265,12 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
                     type="number"
                     placeholder="Min"
                     value={priceRange.min}
-                    onChange={(e) => setPriceRange(prev => ({ ...prev, min: e.target.value }))}
+                    onChange={(e) =>
+                      setPriceRange((prev) => ({
+                        ...prev,
+                        min: e.target.value,
+                      }))
+                    }
                     className="text-sm"
                   />
                 </div>
@@ -256,16 +279,17 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
                     type="number"
                     placeholder="Max"
                     value={priceRange.max}
-                    onChange={(e) => setPriceRange(prev => ({ ...prev, max: e.target.value }))}
+                    onChange={(e) =>
+                      setPriceRange((prev) => ({
+                        ...prev,
+                        max: e.target.value,
+                      }))
+                    }
                     className="text-sm"
                   />
                 </div>
               </div>
-              <Button
-                size="sm"
-                onClick={updatePriceFilter}
-                className="w-full"
-              >
+              <Button size="sm" onClick={updatePriceFilter} className="w-full">
                 Apply Price Range
               </Button>
             </div>
@@ -287,21 +311,24 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
                   type="checkbox"
                   value={brand}
                   onChange={(e) => {
-                    const params = new URLSearchParams(searchParams.toString())
-                    const currentBrands = params.getAll('brand')
-                    
+                    const params = new URLSearchParams(searchParams.toString());
+                    const currentBrands = params.getAll("brand");
+
                     if (e.target.checked) {
-                      params.append('brand', brand)
+                      params.append("brand", brand);
                     } else {
-                      params.delete('brand')
-                      currentBrands.filter(b => b !== brand).forEach(b => {
-                        params.append('brand', b)
-                      })
+                      params.delete("brand");
+                      currentBrands
+                        .filter((b) => b !== brand)
+                        .forEach((b) => {
+                          params.append("brand", b);
+                        });
                     }
-                    
-                    router.push(`/products?${params.toString()}`)
+
+                    const currentPath = window.location.pathname;
+                    router.push(`${currentPath}?${params.toString()}`);
                   }}
-                  checked={searchParams.getAll('brand').includes(brand)}
+                  checked={searchParams.getAll("brand").includes(brand)}
                   className="w-4 h-4 text-primary"
                 />
                 <span className="text-sm">{brand}</span>
@@ -311,5 +338,5 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
         </Card>
       </div>
     </>
-  )
+  );
 }

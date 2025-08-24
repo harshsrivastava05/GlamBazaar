@@ -7,7 +7,7 @@ export interface Product {
   categoryId: number;
   brand?: string | null;
   basePrice: number;
-  salePrice?: number | null;
+  salePrice?: number; // undefined, not null
   featured: boolean;
   isActive: boolean;
   tags?: string | null;
@@ -17,7 +17,8 @@ export interface Product {
   images: Array<{
     id: number;
     url: string;
-    altText: string; // Changed from string | null to string
+    altText: string; // Always a string after transformation
+    alt?: string; // Add this for compatibility with related-products component
     isPrimary: boolean;
     sortOrder: number;
   }>;
@@ -25,7 +26,7 @@ export interface Product {
     id: number;
     sku: string;
     price: number;
-    compareAtPrice?: number | null;
+    compareAtPrice?: number; // undefined, not null
     stockQuantity: number;
     isActive: boolean;
     variantAttributes: Array<{
@@ -49,8 +50,8 @@ export interface Product {
   reviews: Array<{
     id: number;
     rating: number;
-    title?: string | null;
-    comment?: string | null;
+    title?: string; // undefined, not null
+    comment?: string; // undefined, not null
     verifiedPurchase: boolean;
     isApproved: boolean;
     createdAt: string | Date;
@@ -67,10 +68,52 @@ export interface Product {
     parentId?: number | null;
   };
 }
+
 export interface ProductImage {
   id: number;
   url: string;
   altText: string; 
   sortOrder: number;
   isPrimary: boolean;
+}
+
+// Add these interfaces to match your component expectations
+export interface ProductVariant {
+  id: number;
+  sku: string;
+  price: number;
+  compareAtPrice?: number; // undefined, not null
+  stockQuantity: number;
+  isActive: boolean;
+  variantAttributes: Array<{
+    id: number;
+    attributeId: number;
+    attributeOptionId: number;
+    attribute: {
+      id: number;
+      name: string;
+      type: string;
+      displayName: string;
+    };
+    attributeOption: {
+      id: number;
+      value: string;
+      displayValue: string;
+      colorHex?: string | null;
+    };
+  }>;
+}
+
+export interface Review {
+  id: number;
+  rating: number;
+  title?: string; // undefined, not null
+  comment?: string; // undefined, not null
+  verifiedPurchase: boolean;
+  isApproved: boolean;
+  createdAt: string | Date;
+  user: {
+    name: string | null;
+    image?: string | null;
+  };
 }
