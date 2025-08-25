@@ -52,7 +52,7 @@ export default async function OrdersPage() {
               </CardHeader>
               <CardContent className="space-y-3">
                 {order.items.map(item => {
-                  const img = item.product?.images?.
+                  const img = item.product?.images?.[0] // Fixed: Access first image
                   return (
                     <div key={item.id} className="flex items-center gap-3">
                       <div className="relative w-16 h-16">
