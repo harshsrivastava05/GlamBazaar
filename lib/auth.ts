@@ -4,11 +4,13 @@ import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
+import { UserRole } from "@prisma/client";
 
 // Extend the built-in session types
 declare module "next-auth" {
   interface User {
-    role?: string;
+    id: string;
+    role?: UserRole;
   }
 
   interface Session {
@@ -17,14 +19,14 @@ declare module "next-auth" {
       name?: string | null;
       email?: string | null;
       image?: string | null;
-      role?: string;
+      role?: UserRole;
     };
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
-    role?: string;
+    role?: UserRole;
   }
 }
 
@@ -88,11 +90,15 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
+      if (!token.sub) {
+        throw new Error("Invalid token");
+      }
+      
       return {
         ...session,
         user: {
           ...session.user,
-          id: token.sub!,
+          id: token.sub,
           role: token.role,
         },
       };
