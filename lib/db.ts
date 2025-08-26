@@ -43,8 +43,6 @@ export async function getProducts(options?: {
         { brand: { contains: options.search, mode: "insensitive" as const } },
       ],
     }),
-    ...(options?.minPrice && { basePrice: { gte: options.minPrice } }),
-    ...(options?.maxPrice && { basePrice: { lte: options.maxPrice } }),
     ...(options?.brands && options.brands.length > 0 && { brand: { in: options.brands } }),
   };
 
@@ -243,7 +241,6 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
     })),
   };
 }
-
 
 export async function getCategories() {
   return await prisma.category.findMany({
@@ -480,20 +477,19 @@ export async function getCartItemCount(userId: string): Promise<number> {
     return 0
   }
 }
-// Check if product is in cart
+
+// Check if product is in cart - Fixed the unique constraint key
 export async function isProductInCart(
   userId: string, 
   productId: number, 
   variantId?: number
 ): Promise<boolean> {
   try {
-    const cartItem = await prisma.cartItem.findUnique({
+    const cartItem = await prisma.cartItem.findFirst({
       where: {
-        userId_productId_variantId: {
-          userId,
-          productId,
-          variantId: variantId || null,
-        },
+        userId,
+        productId,
+        variantId: variantId || null,
       },
     })
     return !!cartItem
