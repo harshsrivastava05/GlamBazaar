@@ -12,7 +12,7 @@ import { Badge } from '@/app/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select'
 import { useToast } from '@/app/components/ui/use-toast'
 import { formatPrice } from '@/lib/utils'
-import { Plus, Search, Filter, Edit, Trash2, Eye } from 'lucide-react'
+import { Plus, Search, Edit, Trash2, Eye, MoreHorizontal } from 'lucide-react'
 
 interface Product {
   id: number
@@ -29,46 +29,82 @@ interface Product {
   images: Array<{ url: string; isPrimary: boolean }>
 }
 
+interface Category {
+  id: number
+  name: string
+}
+
 export default function AdminProductsPage() {
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
   const router = useRouter()
   const { toast } = useToast()
 
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
-  const [categoryFilter, setCategoryFilter] = useState('')
+  const [categoryFilter, setCategoryFilter] = useState('all_categories')
   const [statusFilter, setStatusFilter] = useState('all')
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
-  const [categories, setCategories] = useState<Array<{ id: number; name: string }>>([])
+  const [categories, setCategories] = useState<Category[]>([])
+  const [error, setError] = useState<string | null>(null)
+
+  // Check authentication
+  useEffect(() => {
+    if (status === 'loading') return // Still loading
+    
+    if (status === 'unauthenticated') {
+      router.push('/login?callbackUrl=/admin/products')
+      return
+    }
+
+    // Check if user has admin/manager role
+    if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'MANAGER') {
+      router.push('/')
+      return
+    }
+  }, [session, status, router])
 
   useEffect(() => {
-    fetchProducts()
-    fetchCategories()
-  }, [currentPage, searchTerm, categoryFilter, statusFilter])
+    if (status === 'authenticated') {
+      fetchProducts()
+      fetchCategories()
+    }
+  }, [currentPage, searchTerm, categoryFilter, statusFilter, status])
 
   const fetchProducts = async () => {
+    if (!session?.user) return
+    
     setLoading(true)
+    setError(null)
+    
     try {
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: '20',
         ...(searchTerm && { search: searchTerm }),
-        ...(categoryFilter && { category: categoryFilter }),
+        ...(categoryFilter && categoryFilter !== 'all_categories' && { category: categoryFilter }),
         ...(statusFilter !== 'all' && { status: statusFilter }),
       })
 
       const response = await fetch(`/api/admin/products?${params}`)
-      if (response.ok) {
-        const data = await response.json()
-        setProducts(data.products)
-        setTotalPages(data.pagination.totalPages)
-      } else {
-        toast({ title: 'Error', description: 'Failed to fetch products', variant: 'destructive' })
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        throw new Error(errorData.error || `HTTP ${response.status}`)
       }
-    } catch (error) {
-      toast({ title: 'Error', description: 'Something went wrong', variant: 'destructive' })
+
+      const data = await response.json()
+      setProducts(data.products || [])
+      setTotalPages(data.pagination?.totalPages || 1)
+    } catch (error: any) {
+      console.error('Failed to fetch products:', error)
+      setError(error.message)
+      toast({ 
+        title: 'Error', 
+        description: `Failed to fetch products: ${error.message}`, 
+        variant: 'destructive' 
+      })
     } finally {
       setLoading(false)
     }
@@ -79,15 +115,15 @@ export default function AdminProductsPage() {
       const response = await fetch('/api/categories')
       if (response.ok) {
         const data = await response.json()
-        setCategories(data)
+        setCategories(data || [])
       }
     } catch (error) {
       console.error('Failed to fetch categories:', error)
     }
   }
 
-  const handleDelete = async (productId: number) => {
-    if (!confirm('Are you sure you want to delete this product?')) return
+  const handleDelete = async (productId: number, productName: string) => {
+    if (!confirm(`Are you sure you want to delete "${productName}"?`)) return
 
     try {
       const response = await fetch(`/api/admin/products/${productId}`, {
@@ -98,14 +134,20 @@ export default function AdminProductsPage() {
         toast({ title: 'Success', description: 'Product deleted successfully' })
         fetchProducts()
       } else {
-        toast({ title: 'Error', description: 'Failed to delete product', variant: 'destructive' })
+        const errorData = await response.json().catch(() => ({ error: 'Delete failed' }))
+        throw new Error(errorData.error || 'Delete failed')
       }
-    } catch (error) {
-      toast({ title: 'Error', description: 'Something went wrong', variant: 'destructive' })
+    } catch (error: any) {
+      console.error('Delete error:', error)
+      toast({ 
+        title: 'Error', 
+        description: error.message || 'Failed to delete product', 
+        variant: 'destructive' 
+      })
     }
   }
 
-  const toggleProductStatus = async (productId: number, currentStatus: boolean) => {
+  const toggleProductStatus = async (productId: number, currentStatus: boolean, productName: string) => {
     try {
       const response = await fetch(`/api/admin/products/${productId}`, {
         method: 'PUT',
@@ -114,14 +156,37 @@ export default function AdminProductsPage() {
       })
 
       if (response.ok) {
-        toast({ title: 'Success', description: 'Product status updated' })
+        toast({ 
+          title: 'Success', 
+          description: `Product ${!currentStatus ? 'activated' : 'deactivated'} successfully` 
+        })
         fetchProducts()
       } else {
-        toast({ title: 'Error', description: 'Failed to update product', variant: 'destructive' })
+        const errorData = await response.json().catch(() => ({ error: 'Update failed' }))
+        throw new Error(errorData.error || 'Update failed')
       }
-    } catch (error) {
-      toast({ title: 'Error', description: 'Something went wrong', variant: 'destructive' })
+    } catch (error: any) {
+      console.error('Status toggle error:', error)
+      toast({ 
+        title: 'Error', 
+        description: error.message || 'Failed to update product status', 
+        variant: 'destructive' 
+      })
     }
+  }
+
+  // Show loading spinner while checking authentication
+  if (status === 'loading') {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    )
+  }
+
+  // Don't render anything if not authenticated or not admin
+  if (status !== 'authenticated' || (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'MANAGER')) {
+    return null
   }
 
   return (
@@ -140,6 +205,26 @@ export default function AdminProductsPage() {
         </Button>
       </div>
 
+      {/* Error Display */}
+      {error && (
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="p-4">
+            <p className="text-red-800">Error: {error}</p>
+            <Button 
+              onClick={() => {
+                setError(null)
+                fetchProducts()
+              }}
+              className="mt-2"
+              variant="outline"
+              size="sm"
+            >
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Filters */}
       <Card>
         <CardContent className="p-6">
@@ -155,12 +240,12 @@ export default function AdminProductsPage() {
                 />
               </div>
             </div>
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <Select value={categoryFilter || "all_categories"} onValueChange={(value) => setCategoryFilter(value === "all_categories" ? "" : value)}>
               <SelectTrigger className="w-full md:w-48">
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Categories</SelectItem>
+                <SelectItem value="all_categories">All Categories</SelectItem>
                 {categories.map((category) => (
                   <SelectItem key={category.id} value={category.id.toString()}>
                     {category.name}
@@ -170,7 +255,7 @@ export default function AdminProductsPage() {
             </Select>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full md:w-32">
-                <SelectValue />
+                <SelectValue placeholder="All Status" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
@@ -200,6 +285,30 @@ export default function AdminProductsPage() {
                 ))}
               </div>
             </div>
+          ) : products.length === 0 ? (
+            <div className="p-6 text-center">
+              <p className="text-muted-foreground">No products found</p>
+              {searchTerm || categoryFilter !== 'all_categories' || statusFilter !== 'all' ? (
+                <Button 
+                  onClick={() => {
+                    setSearchTerm('')
+                    setCategoryFilter('all_categories')
+                    setStatusFilter('all')
+                  }}
+                  variant="outline"
+                  className="mt-2"
+                >
+                  Clear Filters
+                </Button>
+              ) : (
+                <Button asChild className="mt-2">
+                  <Link href="/admin/products/new">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Your First Product
+                  </Link>
+                </Button>
+              )}
+            </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
@@ -218,24 +327,31 @@ export default function AdminProductsPage() {
                     <tr key={product.id} className="border-b hover:bg-muted/50">
                       <td className="p-4">
                         <div className="flex items-center space-x-3">
-                          <div className="relative w-12 h-12">
+                          <div className="relative w-12 h-12 rounded overflow-hidden bg-gray-100">
                             <Image
                               src={product.images.find(img => img.isPrimary)?.url || '/placeholder-product.jpg'}
                               alt={product.name}
                               fill
-                              className="object-cover rounded"
+                              className="object-cover"
+                              onError={(e) => {
+                                e.currentTarget.src = '/placeholder-product.jpg'
+                              }}
                             />
                           </div>
                           <div>
-                            <div className="font-medium">{product.name}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {product.brand}
+                            <div className="font-medium line-clamp-1" title={product.name}>
+                              {product.name}
                             </div>
+                            {product.brand && (
+                              <div className="text-sm text-muted-foreground">
+                                {product.brand}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </td>
                       <td className="p-4">
-                        <span className="text-sm">{product.category.name}</span>
+                        <span className="text-sm">{product.category?.name || 'No Category'}</span>
                       </td>
                       <td className="p-4">
                         <div className="font-medium">
@@ -248,8 +364,14 @@ export default function AdminProductsPage() {
                         )}
                       </td>
                       <td className="p-4">
-                        <span className={`text-sm ${product.totalStock <= 10 ? 'text-red-600' : ''}`}>
-                          {product.totalStock}
+                        <span className={`text-sm ${
+                          product.totalStock <= 10 
+                            ? product.totalStock === 0 
+                              ? 'text-red-600 font-medium' 
+                              : 'text-yellow-600'
+                            : 'text-green-600'
+                        }`}>
+                          {product.totalStock} {product.totalStock === 0 ? '(Out of Stock)' : ''}
                         </span>
                       </td>
                       <td className="p-4">
@@ -267,6 +389,7 @@ export default function AdminProductsPage() {
                           <Button
                             variant="ghost"
                             size="icon"
+                            title="View Product"
                             asChild
                           >
                             <Link href={`/products/${product.slug}`} target="_blank">
@@ -276,6 +399,7 @@ export default function AdminProductsPage() {
                           <Button
                             variant="ghost"
                             size="icon"
+                            title="Edit Product"
                             asChild
                           >
                             <Link href={`/admin/products/${product.id}/edit`}>
@@ -285,14 +409,16 @@ export default function AdminProductsPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => toggleProductStatus(product.id, product.isActive)}
+                            title={product.isActive ? 'Deactivate Product' : 'Activate Product'}
+                            onClick={() => toggleProductStatus(product.id, product.isActive, product.name)}
                           >
                             {product.isActive ? '🔒' : '🔓'}
                           </Button>
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleDelete(product.id)}
+                            title="Delete Product"
+                            onClick={() => handleDelete(product.id, product.name)}
                           >
                             <Trash2 className="h-4 w-4 text-red-500" />
                           </Button>
@@ -308,7 +434,7 @@ export default function AdminProductsPage() {
       </Card>
 
       {/* Pagination */}
-      {totalPages > 1 && (
+      {!loading && totalPages > 1 && (
         <div className="flex items-center justify-center space-x-2">
           <Button
             variant="outline"
