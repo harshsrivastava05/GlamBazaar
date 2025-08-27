@@ -32,6 +32,7 @@ export default function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [cartCount, setCartCount] = useState(0)
+  const [isCartLoading, setIsCartLoading] = useState(false)
   const { data: session, status } = useSession()
   const { wishlistCount } = useWishlist()
   const router = useRouter()
@@ -43,22 +44,61 @@ export default function Header() {
   useEffect(() => {
     if (session?.user?.id) {
       fetchCartCount()
+      // Set up periodic refresh for cart count (every 30 seconds)
+      const interval = setInterval(fetchCartCount, 30000)
+      return () => clearInterval(interval)
     } else {
       setCartCount(0)
     }
   }, [session])
 
+  // Listen for storage events to update cart count across tabs
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'cart-updated' && session?.user?.id) {
+        fetchCartCount()
+      }
+    }
+    
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
+  }, [session])
+
   const fetchCartCount = async () => {
+    if (!session?.user?.id) return
+    
+    setIsCartLoading(true)
     try {
-      const response = await fetch('/api/cart/count')
+      const response = await fetch('/api/cart/count', {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+        }
+      })
       if (response.ok) {
         const data = await response.json()
         setCartCount(data.count || 0)
       }
     } catch (error) {
       console.error('Failed to fetch cart count:', error)
+    } finally {
+      setIsCartLoading(false)
     }
   }
+
+  // Function to update cart count from external components
+  const updateCartCount = (newCount: number) => {
+    setCartCount(newCount)
+    // Trigger storage event for other tabs
+    localStorage.setItem('cart-updated', Date.now().toString())
+  }
+
+  // Expose updateCartCount globally for other components to use
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).updateCartCount = updateCartCount
+    }
+  }, [])
 
   const navigation = [
     { name: 'Products', href: '/products' },
@@ -150,9 +190,9 @@ export default function Header() {
                 <Link href={session ? "/wishlist" : "/login?callbackUrl=/wishlist"}>
                   <Heart className="h-4 w-4" />
                   {session && wishlistCount > 0 && (
-                    <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 text-xs">
+                    <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs font-semibold min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1 shadow-lg ring-2 ring-background">
                       {wishlistCount > 99 ? '99+' : wishlistCount}
-                    </Badge>
+                    </span>
                   )}
                   <span className="sr-only">Wishlist</span>
                 </Link>
@@ -168,9 +208,14 @@ export default function Header() {
                 <Link href="/cart">
                   <ShoppingCart className="h-4 w-4" />
                   {cartCount > 0 && (
-                    <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 text-xs">
+                    <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs font-semibold min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1 shadow-lg ring-2 ring-background animate-in zoom-in-50 duration-200">
                       {cartCount > 99 ? '99+' : cartCount}
-                    </Badge>
+                    </span>
+                  )}
+                  {isCartLoading && (
+                    <div className="absolute -top-1 -right-1 w-[18px] h-[18px] rounded-full bg-blue-100 flex items-center justify-center">
+                      <div className="w-2 h-2 border border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
                   )}
                   <span className="sr-only">Shopping cart</span>
                 </Link>
@@ -219,9 +264,9 @@ export default function Header() {
                         <Heart className="mr-2 h-4 w-4" />
                         Wishlist
                         {wishlistCount > 0 && (
-                          <Badge variant="secondary" className="ml-auto h-5 text-xs">
-                            {wishlistCount}
-                          </Badge>
+                          <span className="ml-auto bg-blue-500 text-white text-xs font-semibold min-w-[20px] h-5 rounded-full flex items-center justify-center px-1">
+                            {wishlistCount > 99 ? '99+' : wishlistCount}
+                          </span>
                         )}
                       </Link>
                     </DropdownMenuItem>
@@ -331,9 +376,9 @@ export default function Header() {
                     >
                       Wishlist
                       {wishlistCount > 0 && (
-                        <Badge variant="secondary" className="h-5 text-xs">
-                          {wishlistCount}
-                        </Badge>
+                        <span className="ml-auto bg-blue-500 text-white text-xs font-semibold min-w-[20px] h-5 rounded-full flex items-center justify-center px-1">
+                          {wishlistCount > 99 ? '99+' : wishlistCount}
+                        </span>
                       )}
                     </Link>
                     {isAdmin && (

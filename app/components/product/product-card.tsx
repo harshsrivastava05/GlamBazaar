@@ -11,6 +11,7 @@ import { Badge } from "@/app/components/ui/badge";
 import { Button } from "@/app/components/ui/button";
 import { useToast } from "@/app/components/ui/use-toast";
 import { useWishlist } from "@/hooks/use-wishlist";
+import { addToCartWithUpdate } from "@/utils/cart";
 import { formatPrice } from "@/lib/utils";
 import { Product } from "@/lib/types";
 
@@ -93,16 +94,11 @@ export default function ProductCard({ product, className }: ProductCardProps) {
 
     setIsAddingToCart(true);
     try {
-      const response = await fetch('/api/cart', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          productId: product.id, 
-          quantity: 1,
-          // If product has variants, we'll add the first available variant
-          ...(product.variants.length > 0 && { variantId: product.variants[0].id })
-        }),
-      });
+      const response = await addToCartWithUpdate(
+        product.id, 
+        product.variants.length > 0 ? product.variants[0].id : undefined, 
+        1
+      );
 
       if (response.ok) {
         toast({
