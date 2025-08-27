@@ -109,6 +109,8 @@ model Product {
     metaTitle        String?
     metaDescription  String?  @db.Text
     tags             String?  @db.Text
+    averageRating    Decimal? @db.Decimal(3, 2) // Added field
+    reviewCount      Int      @default(0) // Added field
     createdAt        DateTime @default(now())
     updatedAt        DateTime @updatedAt
 
@@ -320,7 +322,7 @@ model Review {
   productId  Int
   rating     Int
   title      String?
-  content    String?
+  content    String?  @db.Text
   isApproved Boolean  @default(false)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt

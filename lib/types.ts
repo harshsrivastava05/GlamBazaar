@@ -11,6 +11,8 @@ export interface Product {
   featured: boolean;
   isActive: boolean;
   tags?: string | null;
+  averageRating?: number; // Added field
+  reviewCount: number; // Added field
   createdAt: string; // Always ISO string after transformation
   updatedAt: string; // Always ISO string after transformation
   images: ProductImage[];
@@ -60,8 +62,8 @@ export interface Review {
   id: number;
   rating: number;
   title?: string; // Always string or undefined (never null)
-  comment?: string; // Always string or undefined (never null)
-  verifiedPurchase: boolean;
+  content?: string; // Always string or undefined (never null)
+  comment?: string; // For backward compatibility
   isApproved: boolean;
   createdAt: string; // Always ISO string after transformation
   user: {
@@ -111,8 +113,8 @@ export interface CartItem {
 }
 
 // Type-safe cart item with guaranteed product
-export interface ValidCartItem extends Omit<CartItem, 'product'> {
-  product: NonNullable<CartItem['product']>;
+export interface ValidCartItem extends Omit<CartItem, "product"> {
+  product: NonNullable<CartItem["product"]>;
 }
 
 // Order-related types
@@ -218,48 +220,48 @@ export interface WishlistItem {
 
 // Enums (matching Prisma schema)
 export enum UserRole {
-  USER = 'USER',
-  ADMIN = 'ADMIN',
-  MANAGER = 'MANAGER'
+  USER = "USER",
+  ADMIN = "ADMIN",
+  MANAGER = "MANAGER",
 }
 
 export enum AddressType {
-  HOME = 'HOME',
-  OFFICE = 'OFFICE',
-  OTHER = 'OTHER'
+  HOME = "HOME",
+  OFFICE = "OFFICE",
+  OTHER = "OTHER",
 }
 
 export enum OrderStatus {
-  PENDING = 'PENDING',
-  CONFIRMED = 'CONFIRMED',
-  PROCESSING = 'PROCESSING',
-  SHIPPED = 'SHIPPED',
-  DELIVERED = 'DELIVERED',
-  CANCELLED = 'CANCELLED',
-  RETURNED = 'RETURNED'
+  PENDING = "PENDING",
+  CONFIRMED = "CONFIRMED",
+  PROCESSING = "PROCESSING",
+  SHIPPED = "SHIPPED",
+  DELIVERED = "DELIVERED",
+  CANCELLED = "CANCELLED",
+  RETURNED = "RETURNED",
 }
 
 export enum PaymentStatus {
-  PENDING = 'PENDING',
-  PAID = 'PAID',
-  FAILED = 'FAILED',
-  REFUNDED = 'REFUNDED'
+  PENDING = "PENDING",
+  PAID = "PAID",
+  FAILED = "FAILED",
+  REFUNDED = "REFUNDED",
 }
 
 export enum PaymentMethod {
-  CREDIT_CARD = 'CREDIT_CARD',
-  DEBIT_CARD = 'DEBIT_CARD',
-  UPI = 'UPI',
-  NET_BANKING = 'NET_BANKING',
-  COD = 'COD',
-  DIGITAL_WALLET = 'DIGITAL_WALLET'
+  CREDIT_CARD = "CREDIT_CARD",
+  DEBIT_CARD = "DEBIT_CARD",
+  UPI = "UPI",
+  NET_BANKING = "NET_BANKING",
+  COD = "COD",
+  DIGITAL_WALLET = "DIGITAL_WALLET",
 }
 
 export enum DeliveryType {
-  SAME_DAY = 'SAME_DAY',
-  NEXT_DAY = 'NEXT_DAY',
-  SPEEDPOST = 'SPEEDPOST',
-  EXPRESS = 'EXPRESS'
+  SAME_DAY = "SAME_DAY",
+  NEXT_DAY = "NEXT_DAY",
+  SPEEDPOST = "SPEEDPOST",
+  EXPRESS = "EXPRESS",
 }
 
 // API Response types
@@ -282,7 +284,7 @@ export interface ProductFilters {
   limit?: number;
   offset?: number;
   search?: string;
-  sortBy?: "name" | "price" | "created";
+  sortBy?: "name" | "price" | "created" | "rating";
   sortOrder?: "asc" | "desc";
   minPrice?: number;
   maxPrice?: number;
@@ -319,6 +321,8 @@ export function isValidCartItem(item: CartItem): item is ValidCartItem {
   return item.product !== null && item.product !== undefined;
 }
 
-export function hasVariant(item: CartItem): item is CartItem & { variant: NonNullable<CartItem['variant']> } {
+export function hasVariant(
+  item: CartItem
+): item is CartItem & { variant: NonNullable<CartItem["variant"]> } {
   return item.variant !== null && item.variant !== undefined;
 }
