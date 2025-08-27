@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
@@ -26,13 +26,39 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/app/components/ui/dropdown-menu'
+import { useWishlist } from '@/hooks/use-wishlist'
 
 export default function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [cartCount, setCartCount] = useState(0)
   const { data: session, status } = useSession()
+  const { wishlistCount } = useWishlist()
   const router = useRouter()
+
+  // Check if user is admin or manager
+  const isAdmin = session?.user?.role === 'ADMIN' || session?.user?.role === 'MANAGER'
+
+  // Fetch cart count on mount and when session changes
+  useEffect(() => {
+    if (session?.user?.id) {
+      fetchCartCount()
+    } else {
+      setCartCount(0)
+    }
+  }, [session])
+
+  const fetchCartCount = async () => {
+    try {
+      const response = await fetch('/api/cart/count')
+      if (response.ok) {
+        const data = await response.json()
+        setCartCount(data.count || 0)
+      }
+    } catch (error) {
+      console.error('Failed to fetch cart count:', error)
+    }
+  }
 
   const navigation = [
     { name: 'Products', href: '/products' },
@@ -99,8 +125,8 @@ export default function Header() {
                 <span className="sr-only">Search</span>
               </Button>
 
-              {/* Admin Link - Only show for authenticated users */}
-              {session && (
+              {/* Admin Link - Only show for admin users */}
+              {session && isAdmin && (
                 <Button 
                   variant="ghost" 
                   size="sm" 
@@ -114,6 +140,24 @@ export default function Header() {
                 </Button>
               )}
 
+              {/* Wishlist */}
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="relative h-9 w-9 text-foreground hover:text-foreground bg-transparent hover:bg-accent" 
+                asChild
+              >
+                <Link href={session ? "/wishlist" : "/login?callbackUrl=/wishlist"}>
+                  <Heart className="h-4 w-4" />
+                  {session && wishlistCount > 0 && (
+                    <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 text-xs">
+                      {wishlistCount > 99 ? '99+' : wishlistCount}
+                    </Badge>
+                  )}
+                  <span className="sr-only">Wishlist</span>
+                </Link>
+              </Button>
+
               {/* Cart */}
               <Button 
                 variant="ghost" 
@@ -125,7 +169,7 @@ export default function Header() {
                   <ShoppingCart className="h-4 w-4" />
                   {cartCount > 0 && (
                     <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 text-xs">
-                      {cartCount}
+                      {cartCount > 99 ? '99+' : cartCount}
                     </Badge>
                   )}
                   <span className="sr-only">Shopping cart</span>
@@ -151,6 +195,11 @@ export default function Header() {
                     <div className="px-2 py-1.5">
                       <p className="text-sm font-medium">{session.user?.name}</p>
                       <p className="text-xs text-muted-foreground">{session.user?.email}</p>
+                      {isAdmin && (
+                        <Badge variant="outline" className="mt-1 text-xs">
+                          {session.user?.role}
+                        </Badge>
+                      )}
                     </div>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
@@ -169,8 +218,24 @@ export default function Header() {
                       <Link href="/wishlist" className="flex items-center">
                         <Heart className="mr-2 h-4 w-4" />
                         Wishlist
+                        {wishlistCount > 0 && (
+                          <Badge variant="secondary" className="ml-auto h-5 text-xs">
+                            {wishlistCount}
+                          </Badge>
+                        )}
                       </Link>
                     </DropdownMenuItem>
+                    {isAdmin && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem asChild>
+                          <Link href="/admin" className="flex items-center">
+                            <Shield className="mr-2 h-4 w-4" />
+                            Admin Panel
+                          </Link>
+                        </DropdownMenuItem>
+                      </>
+                    )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       className="text-red-600 focus:text-red-600"
@@ -260,12 +325,26 @@ export default function Header() {
                       Profile
                     </Link>
                     <Link
-                      href="/admin"
-                      className="block px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground rounded-md hover:bg-muted/50"
+                      href="/wishlist"
+                      className="flex items-center justify-between px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground rounded-md hover:bg-muted/50"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
-                      Admin
+                      Wishlist
+                      {wishlistCount > 0 && (
+                        <Badge variant="secondary" className="h-5 text-xs">
+                          {wishlistCount}
+                        </Badge>
+                      )}
                     </Link>
+                    {isAdmin && (
+                      <Link
+                        href="/admin"
+                        className="block px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground rounded-md hover:bg-muted/50"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        Admin Panel
+                      </Link>
+                    )}
                     <button
                       onClick={handleSignOut}
                       className="block w-full text-left px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-md"
