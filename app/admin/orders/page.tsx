@@ -1,107 +1,134 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import Link from 'next/link'
-import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
-import { Button } from '@/app/components/ui/button'
-import { Input } from '@/app/components/ui/input'
-import { Badge } from '@/app/components/ui/badge'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select'
-import { useToast } from '@/app/components/ui/use-toast'
-import { formatPrice, formatDate } from '@/lib/utils'
-import { Search, Eye, Package, Filter } from 'lucide-react'
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/app/components/ui/card";
+import { Button } from "@/app/components/ui/button";
+import { Input } from "@/app/components/ui/input";
+import { Badge } from "@/app/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/app/components/ui/select";
+import { useToast } from "@/app/components/ui/use-toast";
+import { formatPrice, formatDate } from "@/lib/utils";
+import { Search, Eye, Package, Filter } from "lucide-react";
 
 interface Order {
-  id: number
-  orderNumber: string
-  status: string
-  paymentStatus: string
-  totalAmount: number
-  createdAt: string
-  itemsCount: number
-  totalQuantity: number
+  id: number;
+  orderNumber: string;
+  status: string;
+  paymentStatus: string;
+  totalAmount: number;
+  createdAt: string;
+  itemsCount: number;
+  totalQuantity: number;
   user: {
-    id: string
-    name: string
-    email: string
-  }
+    id: string;
+    name: string;
+    email: string;
+  };
 }
 
 const statusColors = {
-  PENDING: 'bg-yellow-100 text-yellow-800',
-  CONFIRMED: 'bg-blue-100 text-blue-800',
-  PROCESSING: 'bg-purple-100 text-purple-800',
-  SHIPPED: 'bg-indigo-100 text-indigo-800',
-  DELIVERED: 'bg-green-100 text-green-800',
-  CANCELLED: 'bg-red-100 text-red-800',
-  RETURNED: 'bg-gray-100 text-gray-800',
-}
+  PENDING: "bg-yellow-100 text-yellow-800",
+  CONFIRMED: "bg-blue-100 text-blue-800",
+  PROCESSING: "bg-purple-100 text-purple-800",
+  SHIPPED: "bg-indigo-100 text-indigo-800",
+  DELIVERED: "bg-green-100 text-green-800",
+  CANCELLED: "bg-red-100 text-red-800",
+  RETURNED: "bg-gray-100 text-gray-800",
+};
 
 const paymentStatusColors = {
-  PENDING: 'bg-yellow-100 text-yellow-800',
-  PAID: 'bg-green-100 text-green-800',
-  FAILED: 'bg-red-100 text-red-800',
-  REFUNDED: 'bg-gray-100 text-gray-800',
-}
+  PENDING: "bg-yellow-100 text-yellow-800",
+  PAID: "bg-green-100 text-green-800",
+  FAILED: "bg-red-100 text-red-800",
+  REFUNDED: "bg-gray-100 text-gray-800",
+};
 
 export default function AdminOrdersPage() {
-  const { toast } = useToast()
-  const [orders, setOrders] = useState<Order[]>([])
-  const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState('')
-  const [paymentFilter, setPaymentFilter] = useState('')
-  const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
+  const { toast } = useToast();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [paymentFilter, setPaymentFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
-    fetchOrders()
-  }, [currentPage, searchTerm, statusFilter, paymentFilter])
+    fetchOrders();
+  }, [currentPage, searchTerm, statusFilter, paymentFilter]);
 
   const fetchOrders = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
       const params = new URLSearchParams({
         page: currentPage.toString(),
-        limit: '20',
+        limit: "20",
         ...(searchTerm && { search: searchTerm }),
-        ...(statusFilter && { status: statusFilter }),
-        ...(paymentFilter && { paymentStatus: paymentFilter }),
-      })
+        ...(statusFilter !== "all" && { status: statusFilter }),
+        ...(paymentFilter !== "all" && { paymentStatus: paymentFilter }),
+      });
 
-      const response = await fetch(`/api/admin/orders?${params}`)
+      const response = await fetch(`/api/admin/orders?${params}`);
       if (response.ok) {
-        const data = await response.json()
-        setOrders(data.orders)
-        setTotalPages(data.pagination.totalPages)
+        const data = await response.json();
+        setOrders(data.orders);
+        setTotalPages(data.pagination.totalPages);
       } else {
-        toast({ title: 'Error', description: 'Failed to fetch orders', variant: 'destructive' })
+        toast({
+          title: "Error",
+          description: "Failed to fetch orders",
+          variant: "destructive",
+        });
       }
     } catch (error) {
-      toast({ title: 'Error', description: 'Something went wrong', variant: 'destructive' })
+      toast({
+        title: "Error",
+        description: "Something went wrong",
+        variant: "destructive",
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const updateOrderStatus = async (orderId: number, newStatus: string) => {
     try {
       const response = await fetch(`/api/admin/orders/${orderId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
-      })
+      });
 
       if (response.ok) {
-        toast({ title: 'Success', description: 'Order status updated' })
-        fetchOrders()
+        toast({ title: "Success", description: "Order status updated" });
+        fetchOrders();
       } else {
-        toast({ title: 'Error', description: 'Failed to update order', variant: 'destructive' })
+        toast({
+          title: "Error",
+          description: "Failed to update order",
+          variant: "destructive",
+        });
       }
     } catch (error) {
-      toast({ title: 'Error', description: 'Something went wrong', variant: 'destructive' })
+      toast({
+        title: "Error",
+        description: "Something went wrong",
+        variant: "destructive",
+      });
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -133,7 +160,7 @@ export default function AdminOrdersPage() {
                 <SelectValue placeholder="All Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Status</SelectItem>
+                <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="PENDING">Pending</SelectItem>
                 <SelectItem value="CONFIRMED">Confirmed</SelectItem>
                 <SelectItem value="PROCESSING">Processing</SelectItem>
@@ -147,7 +174,7 @@ export default function AdminOrdersPage() {
                 <SelectValue placeholder="All Payments" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Payments</SelectItem>
+                <SelectItem value="all">All Payments</SelectItem>
                 <SelectItem value="PENDING">Pending</SelectItem>
                 <SelectItem value="PAID">Paid</SelectItem>
                 <SelectItem value="FAILED">Failed</SelectItem>
@@ -199,29 +226,45 @@ export default function AdminOrdersPage() {
                       <td className="p-4">
                         <div>
                           <div className="font-medium">{order.user.name}</div>
-                          <div className="text-sm text-muted-foreground">{order.user.email}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {order.user.email}
+                          </div>
                         </div>
                       </td>
                       <td className="p-4">
-                        <span className="text-sm">{order.totalQuantity} items</span>
+                        <span className="text-sm">
+                          {order.totalQuantity} items
+                        </span>
                       </td>
                       <td className="p-4">
-                        <span className="font-medium">{formatPrice(order.totalAmount)}</span>
+                        <span className="font-medium">
+                          {formatPrice(order.totalAmount)}
+                        </span>
                       </td>
                       <td className="p-4">
                         <Select
                           value={order.status}
-                          onValueChange={(value) => updateOrderStatus(order.id, value)}
+                          onValueChange={(value) =>
+                            updateOrderStatus(order.id, value)
+                          }
                         >
                           <SelectTrigger className="w-32">
-                            <Badge className={statusColors[order.status as keyof typeof statusColors]}>
+                            <Badge
+                              className={
+                                statusColors[
+                                  order.status as keyof typeof statusColors
+                                ]
+                              }
+                            >
                               {order.status}
                             </Badge>
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="PENDING">Pending</SelectItem>
                             <SelectItem value="CONFIRMED">Confirmed</SelectItem>
-                            <SelectItem value="PROCESSING">Processing</SelectItem>
+                            <SelectItem value="PROCESSING">
+                              Processing
+                            </SelectItem>
                             <SelectItem value="SHIPPED">Shipped</SelectItem>
                             <SelectItem value="DELIVERED">Delivered</SelectItem>
                             <SelectItem value="CANCELLED">Cancelled</SelectItem>
@@ -229,19 +272,23 @@ export default function AdminOrdersPage() {
                         </Select>
                       </td>
                       <td className="p-4">
-                        <Badge className={paymentStatusColors[order.paymentStatus as keyof typeof paymentStatusColors]}>
+                        <Badge
+                          className={
+                            paymentStatusColors[
+                              order.paymentStatus as keyof typeof paymentStatusColors
+                            ]
+                          }
+                        >
                           {order.paymentStatus}
                         </Badge>
                       </td>
                       <td className="p-4">
-                        <span className="text-sm">{formatDate(order.createdAt)}</span>
+                        <span className="text-sm">
+                          {formatDate(order.createdAt)}
+                        </span>
                       </td>
                       <td className="p-4">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          asChild
-                        >
+                        <Button variant="ghost" size="icon" asChild>
                           <Link href={`/admin/orders/${order.id}`}>
                             <Eye className="h-4 w-4" />
                           </Link>
@@ -279,5 +326,5 @@ export default function AdminOrdersPage() {
         </div>
       )}
     </div>
-  )
+  );
 }

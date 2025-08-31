@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { OrderStatus, PaymentStatus } from "@prisma/client";
 
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -24,8 +25,8 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit;
 
     const where = {
-      ...(search && {
-        OR: [
+      ...(search && { 
+        OR: [ 
           { orderNumber: { contains: search, mode: "insensitive" as const } },
           {
             user: { name: { contains: search, mode: "insensitive" as const } },
@@ -35,8 +36,8 @@ export async function GET(request: NextRequest) {
           },
         ],
       }),
-      ...(status && { status }),
-      ...(paymentStatus && { paymentStatus }),
+      ...(status && { status: status as OrderStatus }),
+      ...(paymentStatus && { paymentStatus: paymentStatus as PaymentStatus }),
     };
 
     const [orders, total] = await Promise.all([

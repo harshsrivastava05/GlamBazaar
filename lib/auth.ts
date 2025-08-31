@@ -112,7 +112,7 @@ export const authOptions: NextAuthOptions = {
         user: {
           ...session.user,
           id: token.sub,
-          role: token.role || UserRole.USER,
+          role: token.role || UserRole.USER, // Use USER instead of CUSTOMER
         },
       };
     },

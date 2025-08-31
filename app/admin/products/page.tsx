@@ -1,192 +1,236 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import Image from 'next/image'
-import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
-import { Button } from '@/app/components/ui/button'
-import { Input } from '@/app/components/ui/input'
-import { Badge } from '@/app/components/ui/badge'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select'
-import { useToast } from '@/app/components/ui/use-toast'
-import { formatPrice } from '@/lib/utils'
-import { Plus, Search, Edit, Trash2, Eye, MoreHorizontal } from 'lucide-react'
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/app/components/ui/card";
+import { Button } from "@/app/components/ui/button";
+import { Input } from "@/app/components/ui/input";
+import { Badge } from "@/app/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/app/components/ui/select";
+import { useToast } from "@/app/components/ui/use-toast";
+import { formatPrice } from "@/lib/utils";
+import { Plus, Search, Edit, Trash2, Eye } from "lucide-react";
+import { UserRole } from "@prisma/client";
 
 interface Product {
-  id: number
-  name: string
-  slug: string
-  basePrice: number
-  salePrice?: number
-  brand?: string
-  isActive: boolean
-  featured: boolean
-  totalStock: number
-  reviewCount: number
-  category: { id: number; name: string }
-  images: Array<{ url: string; isPrimary: boolean }>
+  id: number;
+  name: string;
+  slug: string;
+  basePrice: number;
+  salePrice?: number;
+  brand?: string;
+  isActive: boolean;
+  featured: boolean;
+  totalStock: number;
+  reviewCount: number;
+  category: { id: number; name: string };
+  images: Array<{ url: string; isPrimary: boolean }>;
 }
 
 interface Category {
-  id: number
-  name: string
+  id: number;
+  name: string;
 }
 
 export default function AdminProductsPage() {
-  const { data: session, status } = useSession()
-  const router = useRouter()
-  const { toast } = useToast()
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const { toast } = useToast();
 
-  const [products, setProducts] = useState<Product[]>([])
-  const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [categoryFilter, setCategoryFilter] = useState('all_categories')
-  const [statusFilter, setStatusFilter] = useState('all')
-  const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
-  const [categories, setCategories] = useState<Category[]>([])
-  const [error, setError] = useState<string | null>(null)
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all_categories");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   // Check authentication
   useEffect(() => {
-    if (status === 'loading') return // Still loading
-    
-    if (status === 'unauthenticated') {
-      router.push('/login?callbackUrl=/admin/products')
-      return
+    if (status === "loading") return; // Still loading
+
+    if (status === "unauthenticated") {
+      router.push("/login?callbackUrl=/admin/products");
+      return;
     }
 
-    // Check if user has admin/manager role
-    if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'MANAGER') {
-      router.push('/')
-      return
+    // Check if user has admin/manager role - Updated to use correct enum values
+    if (
+      session?.user?.role !== UserRole.ADMIN &&
+      session?.user?.role !== UserRole.MANAGER
+    ) {
+      toast({
+        title: "Access Denied",
+        description: "You do not have permission to access this page",
+        variant: "destructive",
+      });
+      router.push("/");
+      return;
     }
-  }, [session, status, router])
+  }, [session, status, router, toast]);
 
   useEffect(() => {
-    if (status === 'authenticated') {
-      fetchProducts()
-      fetchCategories()
+    if (
+      status === "authenticated" &&
+      (session?.user?.role === UserRole.ADMIN ||
+        session?.user?.role === UserRole.MANAGER)
+    ) {
+      fetchProducts();
+      fetchCategories();
     }
-  }, [currentPage, searchTerm, categoryFilter, statusFilter, status])
+  }, [currentPage, searchTerm, categoryFilter, statusFilter, status, session]);
 
   const fetchProducts = async () => {
-    if (!session?.user) return
-    
-    setLoading(true)
-    setError(null)
-    
+    if (!session?.user) return;
+
+    setLoading(true);
+    setError(null);
+
     try {
       const params = new URLSearchParams({
         page: currentPage.toString(),
-        limit: '20',
+        limit: "20",
         ...(searchTerm && { search: searchTerm }),
-        ...(categoryFilter && categoryFilter !== 'all_categories' && { category: categoryFilter }),
-        ...(statusFilter !== 'all' && { status: statusFilter }),
-      })
+        ...(categoryFilter &&
+          categoryFilter !== "all_categories" && { category: categoryFilter }),
+        ...(statusFilter !== "all" && { status: statusFilter }),
+      });
 
-      const response = await fetch(`/api/admin/products?${params}`)
-      
+      const response = await fetch(`/api/admin/products?${params}`);
+
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
-        throw new Error(errorData.error || `HTTP ${response.status}`)
+        const errorData = await response
+          .json()
+          .catch(() => ({ error: "Unknown error" }));
+        throw new Error(errorData.error || `HTTP ${response.status}`);
       }
 
-      const data = await response.json()
-      setProducts(data.products || [])
-      setTotalPages(data.pagination?.totalPages || 1)
+      const data = await response.json();
+      setProducts(data.products || []);
+      setTotalPages(data.pagination?.totalPages || 1);
     } catch (error: any) {
-      console.error('Failed to fetch products:', error)
-      setError(error.message)
-      toast({ 
-        title: 'Error', 
-        description: `Failed to fetch products: ${error.message}`, 
-        variant: 'destructive' 
-      })
+      console.error("Failed to fetch products:", error);
+      setError(error.message);
+      toast({
+        title: "Error",
+        description: `Failed to fetch products: ${error.message}`,
+        variant: "destructive",
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('/api/categories')
+      const response = await fetch("/api/categories");
       if (response.ok) {
-        const data = await response.json()
-        setCategories(data || [])
+        const data = await response.json();
+        setCategories(data || []);
       }
     } catch (error) {
-      console.error('Failed to fetch categories:', error)
+      console.error("Failed to fetch categories:", error);
     }
-  }
+  };
 
   const handleDelete = async (productId: number, productName: string) => {
-    if (!confirm(`Are you sure you want to delete "${productName}"?`)) return
+    if (!confirm(`Are you sure you want to delete "${productName}"?`)) return;
 
     try {
       const response = await fetch(`/api/admin/products/${productId}`, {
-        method: 'DELETE',
-      })
+        method: "DELETE",
+      });
 
       if (response.ok) {
-        toast({ title: 'Success', description: 'Product deleted successfully' })
-        fetchProducts()
+        toast({
+          title: "Success",
+          description: "Product deleted successfully",
+        });
+        fetchProducts();
       } else {
-        const errorData = await response.json().catch(() => ({ error: 'Delete failed' }))
-        throw new Error(errorData.error || 'Delete failed')
+        const errorData = await response
+          .json()
+          .catch(() => ({ error: "Delete failed" }));
+        throw new Error(errorData.error || "Delete failed");
       }
     } catch (error: any) {
-      console.error('Delete error:', error)
-      toast({ 
-        title: 'Error', 
-        description: error.message || 'Failed to delete product', 
-        variant: 'destructive' 
-      })
+      console.error("Delete error:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete product",
+        variant: "destructive",
+      });
     }
-  }
+  };
 
-  const toggleProductStatus = async (productId: number, currentStatus: boolean, productName: string) => {
+  const toggleProductStatus = async (
+    productId: number,
+    currentStatus: boolean,
+    productName: string
+  ) => {
     try {
       const response = await fetch(`/api/admin/products/${productId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isActive: !currentStatus }),
-      })
+      });
 
       if (response.ok) {
-        toast({ 
-          title: 'Success', 
-          description: `Product ${!currentStatus ? 'activated' : 'deactivated'} successfully` 
-        })
-        fetchProducts()
+        toast({
+          title: "Success",
+          description: `Product ${
+            !currentStatus ? "activated" : "deactivated"
+          } successfully`,
+        });
+        fetchProducts();
       } else {
-        const errorData = await response.json().catch(() => ({ error: 'Update failed' }))
-        throw new Error(errorData.error || 'Update failed')
+        const errorData = await response
+          .json()
+          .catch(() => ({ error: "Update failed" }));
+        throw new Error(errorData.error || "Update failed");
       }
     } catch (error: any) {
-      console.error('Status toggle error:', error)
-      toast({ 
-        title: 'Error', 
-        description: error.message || 'Failed to update product status', 
-        variant: 'destructive' 
-      })
+      console.error("Status toggle error:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update product status",
+        variant: "destructive",
+      });
     }
-  }
+  };
 
   // Show loading spinner while checking authentication
-  if (status === 'loading') {
+  if (status === "loading") {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
       </div>
-    )
+    );
   }
 
   // Don't render anything if not authenticated or not admin
-  if (status !== 'authenticated' || (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'MANAGER')) {
-    return null
+  if (
+    status !== "authenticated" ||
+    (session?.user?.role !== UserRole.ADMIN &&
+      session?.user?.role !== UserRole.MANAGER)
+  ) {
+    return null;
   }
 
   return (
@@ -210,10 +254,10 @@ export default function AdminProductsPage() {
         <Card className="border-red-200 bg-red-50">
           <CardContent className="p-4">
             <p className="text-red-800">Error: {error}</p>
-            <Button 
+            <Button
               onClick={() => {
-                setError(null)
-                fetchProducts()
+                setError(null);
+                fetchProducts();
               }}
               className="mt-2"
               variant="outline"
@@ -240,7 +284,12 @@ export default function AdminProductsPage() {
                 />
               </div>
             </div>
-            <Select value={categoryFilter || "all_categories"} onValueChange={(value) => setCategoryFilter(value === "all_categories" ? "" : value)}>
+            <Select
+              value={categoryFilter || "all_categories"}
+              onValueChange={(value) =>
+                setCategoryFilter(value === "all_categories" ? "" : value)
+              }
+            >
               <SelectTrigger className="w-full md:w-48">
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
@@ -288,12 +337,14 @@ export default function AdminProductsPage() {
           ) : products.length === 0 ? (
             <div className="p-6 text-center">
               <p className="text-muted-foreground">No products found</p>
-              {searchTerm || categoryFilter !== 'all_categories' || statusFilter !== 'all' ? (
-                <Button 
+              {searchTerm ||
+              categoryFilter !== "all_categories" ||
+              statusFilter !== "all" ? (
+                <Button
                   onClick={() => {
-                    setSearchTerm('')
-                    setCategoryFilter('all_categories')
-                    setStatusFilter('all')
+                    setSearchTerm("");
+                    setCategoryFilter("all_categories");
+                    setStatusFilter("all");
                   }}
                   variant="outline"
                   className="mt-2"
@@ -329,17 +380,24 @@ export default function AdminProductsPage() {
                         <div className="flex items-center space-x-3">
                           <div className="relative w-12 h-12 rounded overflow-hidden bg-gray-100">
                             <Image
-                              src={product.images.find(img => img.isPrimary)?.url || '/placeholder-product.jpg'}
+                              src={
+                                product.images.find((img) => img.isPrimary)
+                                  ?.url || "/placeholder-product.jpg"
+                              }
                               alt={product.name}
                               fill
                               className="object-cover"
                               onError={(e) => {
-                                e.currentTarget.src = '/placeholder-product.jpg'
+                                e.currentTarget.src =
+                                  "/placeholder-product.jpg";
                               }}
                             />
                           </div>
                           <div>
-                            <div className="font-medium line-clamp-1" title={product.name}>
+                            <div
+                              className="font-medium line-clamp-1"
+                              title={product.name}
+                            >
                               {product.name}
                             </div>
                             {product.brand && (
@@ -351,7 +409,9 @@ export default function AdminProductsPage() {
                         </div>
                       </td>
                       <td className="p-4">
-                        <span className="text-sm">{product.category?.name || 'No Category'}</span>
+                        <span className="text-sm">
+                          {product.category?.name || "No Category"}
+                        </span>
                       </td>
                       <td className="p-4">
                         <div className="font-medium">
@@ -364,20 +424,25 @@ export default function AdminProductsPage() {
                         )}
                       </td>
                       <td className="p-4">
-                        <span className={`text-sm ${
-                          product.totalStock <= 10 
-                            ? product.totalStock === 0 
-                              ? 'text-red-600 font-medium' 
-                              : 'text-yellow-600'
-                            : 'text-green-600'
-                        }`}>
-                          {product.totalStock} {product.totalStock === 0 ? '(Out of Stock)' : ''}
+                        <span
+                          className={`text-sm ${
+                            product.totalStock <= 10
+                              ? product.totalStock === 0
+                                ? "text-red-600 font-medium"
+                                : "text-yellow-600"
+                              : "text-green-600"
+                          }`}
+                        >
+                          {product.totalStock}{" "}
+                          {product.totalStock === 0 ? "(Out of Stock)" : ""}
                         </span>
                       </td>
                       <td className="p-4">
                         <div className="flex items-center space-x-2">
-                          <Badge variant={product.isActive ? 'default' : 'secondary'}>
-                            {product.isActive ? 'Active' : 'Inactive'}
+                          <Badge
+                            variant={product.isActive ? "default" : "secondary"}
+                          >
+                            {product.isActive ? "Active" : "Inactive"}
                           </Badge>
                           {product.featured && (
                             <Badge variant="outline">Featured</Badge>
@@ -392,7 +457,10 @@ export default function AdminProductsPage() {
                             title="View Product"
                             asChild
                           >
-                            <Link href={`/products/${product.slug}`} target="_blank">
+                            <Link
+                              href={`/products/${product.slug}`}
+                              target="_blank"
+                            >
                               <Eye className="h-4 w-4" />
                             </Link>
                           </Button>
@@ -409,19 +477,34 @@ export default function AdminProductsPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            title={product.isActive ? 'Deactivate Product' : 'Activate Product'}
-                            onClick={() => toggleProductStatus(product.id, product.isActive, product.name)}
+                            title={
+                              product.isActive
+                                ? "Deactivate Product"
+                                : "Activate Product"
+                            }
+                            onClick={() =>
+                              toggleProductStatus(
+                                product.id,
+                                product.isActive,
+                                product.name
+                              )
+                            }
                           >
-                            {product.isActive ? '🔒' : '🔓'}
+                            {product.isActive ? "🔒" : "🔓"}
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            title="Delete Product"
-                            onClick={() => handleDelete(product.id, product.name)}
-                          >
-                            <Trash2 className="h-4 w-4 text-red-500" />
-                          </Button>
+                          {/* Only allow delete for ADMIN role */}
+                          {session?.user?.role === UserRole.ADMIN && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              title="Delete Product"
+                              onClick={() =>
+                                handleDelete(product.id, product.name)
+                              }
+                            >
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -456,5 +539,5 @@ export default function AdminProductsPage() {
         </div>
       )}
     </div>
-  )
+  );
 }

@@ -43,7 +43,8 @@ export async function getProducts(options?: {
         { brand: { contains: options.search, mode: "insensitive" as const } },
       ],
     }),
-    ...(options?.brands && options.brands.length > 0 && { brand: { in: options.brands } }),
+    ...(options?.brands &&
+      options.brands.length > 0 && { brand: { in: options.brands } }),
   };
 
   // Handle price range filter (both min and max)
@@ -150,6 +151,7 @@ export async function getProducts(options?: {
     salePrice: product.salePrice ? Number(product.salePrice) : undefined, // Convert null to undefined
     createdAt: product.createdAt.toISOString(),
     updatedAt: product.updatedAt.toISOString(),
+    reviewCount: product.reviews.length,
     images: product.images.map((img) => ({
       ...img,
       altText: img.altText || `${product.name} image`, // Ensure altText is always a string
@@ -167,6 +169,7 @@ export async function getProducts(options?: {
       title: review.title ?? undefined, // Convert null to undefined
       comment: review.comment ?? undefined, // Convert null to undefined
       createdAt: review.createdAt.toISOString(),
+      reviewCount: product.reviews.length, // Add reviewCount based on the fetched reviews
     })),
   }));
 }
@@ -221,6 +224,7 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
     salePrice: product.salePrice ? Number(product.salePrice) : undefined, // Convert null to undefined
     createdAt: product.createdAt.toISOString(),
     updatedAt: product.updatedAt.toISOString(),
+    reviewCount: product.reviews.length,
     images: product.images.map((img) => ({
       ...img,
       altText: img.altText || `${product.name} image`, // Ensure altText is always a string
@@ -238,6 +242,7 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
       title: review.title ?? undefined, // Convert null to undefined
       comment: review.comment ?? undefined, // Convert null to undefined
       createdAt: review.createdAt.toISOString(),
+      // Add reviewCount based on the fetched reviews
     })),
   };
 }
@@ -325,19 +330,19 @@ export async function getCartItems(userId: string) {
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
-    })
+      orderBy: { createdAt: "desc" },
+    });
   } catch (error) {
-    console.error('Error fetching cart items:', error)
-    throw new Error('Failed to fetch cart items')
+    console.error("Error fetching cart items:", error);
+    throw new Error("Failed to fetch cart items");
   }
 }
 
 // Enhanced addToCart with upsert logic
 export async function addToCart(
-  userId: string, 
-  productId: number, 
-  variantId?: number, 
+  userId: string,
+  productId: number,
+  variantId?: number,
   quantity: number = 1
 ) {
   try {
@@ -403,8 +408,8 @@ export async function addToCart(
       });
     }
   } catch (error) {
-    console.error('Error adding to cart:', error)
-    throw new Error('Failed to add item to cart')
+    console.error("Error adding to cart:", error);
+    throw new Error("Failed to add item to cart");
   }
 }
 
@@ -413,7 +418,7 @@ export async function updateCartItem(cartItemId: number, quantity: number) {
   try {
     return await prisma.cartItem.update({
       where: { id: cartItemId },
-      data: { 
+      data: {
         quantity,
         updatedAt: new Date(),
       },
@@ -433,10 +438,10 @@ export async function updateCartItem(cartItemId: number, quantity: number) {
           },
         },
       },
-    })
+    });
   } catch (error) {
-    console.error('Error updating cart item:', error)
-    throw new Error('Failed to update cart item')
+    console.error("Error updating cart item:", error);
+    throw new Error("Failed to update cart item");
   }
 }
 
@@ -445,10 +450,10 @@ export async function removeCartItem(cartItemId: number) {
   try {
     return await prisma.cartItem.delete({
       where: { id: cartItemId },
-    })
+    });
   } catch (error) {
-    console.error('Error removing cart item:', error)
-    throw new Error('Failed to remove cart item')
+    console.error("Error removing cart item:", error);
+    throw new Error("Failed to remove cart item");
   }
 }
 
@@ -457,10 +462,10 @@ export async function clearCart(userId: string) {
   try {
     return await prisma.cartItem.deleteMany({
       where: { userId },
-    })
+    });
   } catch (error) {
-    console.error('Error clearing cart:', error)
-    throw new Error('Failed to clear cart')
+    console.error("Error clearing cart:", error);
+    throw new Error("Failed to clear cart");
   }
 }
 
@@ -470,18 +475,18 @@ export async function getCartItemCount(userId: string): Promise<number> {
     const result = await prisma.cartItem.aggregate({
       where: { userId },
       _sum: { quantity: true },
-    })
-    return result._sum.quantity || 0
+    });
+    return result._sum.quantity || 0;
   } catch (error) {
-    console.error('Error getting cart count:', error)
-    return 0
+    console.error("Error getting cart count:", error);
+    return 0;
   }
 }
 
 // Check if product is in cart - Fixed the unique constraint key
 export async function isProductInCart(
-  userId: string, 
-  productId: number, 
+  userId: string,
+  productId: number,
   variantId?: number
 ): Promise<boolean> {
   try {
@@ -491,11 +496,11 @@ export async function isProductInCart(
         productId,
         variantId: variantId || null,
       },
-    })
-    return !!cartItem
+    });
+    return !!cartItem;
   } catch (error) {
-    console.error('Error checking cart item:', error)
-    return false
+    console.error("Error checking cart item:", error);
+    return false;
   }
 }
 
@@ -527,7 +532,7 @@ export async function getCategoryBySlug(slug: string) {
       },
       children: {
         where: { isActive: true },
-        orderBy: { sortOrder: 'asc' },
+        orderBy: { sortOrder: "asc" },
         select: {
           id: true,
           name: true,
@@ -536,7 +541,7 @@ export async function getCategoryBySlug(slug: string) {
         },
       },
     },
-  })
+  });
 }
 
 export async function getOrdersByUser(userId: string) {

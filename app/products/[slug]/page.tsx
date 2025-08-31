@@ -128,7 +128,7 @@ async function ProductContent({ params }: ProductPageProps) {
             <Button variant="outline" size="icon">
               <Share className="h-4 w-4" />
               <span className="sr-only">Share</span>
-            </Button>
+            </Button> 
           </div>
 
           {/* Features */}
