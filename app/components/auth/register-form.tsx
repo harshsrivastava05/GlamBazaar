@@ -62,6 +62,7 @@ export default function RegisterForm() {
         const errorData = await response.json()
         setError(errorData.message || 'Something went wrong')
       }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       setError('Something went wrong. Please try again.')
     } finally {

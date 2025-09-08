@@ -7,7 +7,6 @@ import { join } from 'path'
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions)
   
-  // @ts-ignore
   if (!session?.user?.id || (session.user.role !== 'ADMIN' && session.user.role !== 'MANAGER')) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }

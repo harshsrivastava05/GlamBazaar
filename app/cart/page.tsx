@@ -57,6 +57,7 @@ interface CartSummary {
 }
 
 export default function CartPage() {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { data: session, status } = useSession();
   const router = useRouter();
   const { toast } = useToast();
@@ -95,6 +96,7 @@ export default function CartPage() {
           variant: "destructive",
         });
       }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       toast({
         title: "Error",
@@ -133,6 +135,7 @@ export default function CartPage() {
           variant: "destructive",
         });
       }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       toast({
         title: "Error",
@@ -165,6 +168,7 @@ export default function CartPage() {
           variant: "destructive",
         });
       }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       toast({
         title: "Error",

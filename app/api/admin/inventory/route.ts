@@ -3,11 +3,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
-// GET /api/admin/inventory - Get inventory overview
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
 
-  // @ts-ignore
   if (
     !session?.user?.id ||
     (session.user.role !== "ADMIN" && session.user.role !== "MANAGER")
@@ -46,7 +44,7 @@ export async function GET(request: NextRequest) {
       ${stockQuery ? stockQuery : ""}
       ORDER BY totalStock ASC, p.name ASC
     `;
-
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const formattedInventory = (inventory as any[]).map((item) => ({
       ...item,
       basePrice: Number(item.basePrice),
@@ -81,11 +79,9 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// PUT /api/admin/inventory - Bulk update stock
 export async function PUT(request: NextRequest) {
   const session = await getServerSession(authOptions);
 
-  // @ts-ignore
   if (
     !session?.user?.id ||
     (session.user.role !== "ADMIN" && session.user.role !== "MANAGER")
@@ -103,7 +99,7 @@ export async function PUT(request: NextRequest) {
         { status: 400 }
       );
     }
-
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updatePromises = updates.map((update: any) =>
       prisma.productVariant.update({
         where: { id: update.variantId },

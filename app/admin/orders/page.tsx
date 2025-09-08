@@ -5,8 +5,6 @@ import Link from "next/link";
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
 } from "@/app/components/ui/card";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
@@ -20,7 +18,7 @@ import {
 } from "@/app/components/ui/select";
 import { useToast } from "@/app/components/ui/use-toast";
 import { formatPrice, formatDate } from "@/lib/utils";
-import { Search, Eye, Package, Filter } from "lucide-react";
+import { Search, Eye } from "lucide-react";
 
 interface Order {
   id: number;

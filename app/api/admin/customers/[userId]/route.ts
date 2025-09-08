@@ -8,7 +8,7 @@ export async function GET(
   { params }: { params: { userId: string } }
 ) {
   const session = await getServerSession(authOptions);
-  // @ts-ignore
+  
   if (
     !session?.user?.id ||
     (session.user.role !== "ADMIN" && session.user.role !== "MANAGER")

@@ -107,6 +107,7 @@ export async function PUT(
     }
 
     // Prepare update data
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updateData: any = {};
 
     // Only update provided fields

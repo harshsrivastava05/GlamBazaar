@@ -67,6 +67,7 @@ export default function WishlistPage() {
           variant: "destructive",
         });
       }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       toast({
         title: "Error",
@@ -103,6 +104,7 @@ export default function WishlistPage() {
           variant: "destructive",
         });
       }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       toast({
         title: "Error",
@@ -148,6 +150,7 @@ export default function WishlistPage() {
           variant: "destructive",
         });
       }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       toast({
         title: "Error",

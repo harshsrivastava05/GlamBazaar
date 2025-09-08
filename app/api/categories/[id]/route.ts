@@ -76,7 +76,6 @@ export async function PUT(
 ) {
   const session = await getServerSession(authOptions);
 
-  // @ts-ignore
   if (!session?.user?.id || session.user.role !== "ADMIN") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -121,7 +120,6 @@ export async function DELETE(
 ) {
   const session = await getServerSession(authOptions);
 
-  // @ts-ignore
   if (!session?.user?.id || session.user.role !== "ADMIN") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

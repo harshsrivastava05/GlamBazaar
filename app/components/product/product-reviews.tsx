@@ -12,11 +12,11 @@ import { Review } from '@/lib/types'
 
 interface ProductReviewsProps {
   reviews: Review[]
-  productId: number
 }
 
-export default function ProductReviews({ reviews, productId }: ProductReviewsProps) {
+export default function ProductReviews({ reviews }: ProductReviewsProps) {
   const { data: session } = useSession()
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [showReviewForm, setShowReviewForm] = useState(false)
   const [expandedReviews, setExpandedReviews] = useState<Set<number>>(new Set())
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'highest' | 'lowest'>('newest')
@@ -186,6 +186,7 @@ export default function ProductReviews({ reviews, productId }: ProductReviewsPro
             <CardTitle>All Reviews ({approvedReviews.length})</CardTitle>
             <select
               value={sortBy}
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               onChange={(e) => setSortBy(e.target.value as any)}
               className="border border-input bg-background px-3 py-1 text-sm rounded-md"
             >
@@ -215,7 +216,7 @@ export default function ProductReviews({ reviews, productId }: ProductReviewsPro
                     <div className="flex-1 space-y-2">
                       <div className="flex items-center gap-2">
                         <span className="font-medium">{review.user.name || 'Anonymous'}</span>
-                        {review.verifiedPurchase && (
+                        {review.isApproved && (
                           <Badge variant="secondary" className="text-xs">
                             Verified Purchase
                           </Badge>

@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -54,6 +55,7 @@ export async function POST(request: NextRequest) {
       shippingCountry: data.shippingCountry ?? 'India',
       deliveryType: data.deliveryType ?? 'SPEEDPOST',
       items: {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         create: data.items.map((it: any) => ({
           productId: it.productId,
           variantId: it.variantId ?? null,

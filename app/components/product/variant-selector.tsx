@@ -32,6 +32,7 @@ export default function VariantSelector({ variants, onVariantChange }: VariantSe
   }, {} as Record<string, { attribute: ProductVariant['variantAttributes'][0]['attribute']; options: Set<ProductVariant['variantAttributes'][0]['attributeOption']> }>)
 
   // Convert sets to arrays for easier iteration
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const attributeGroupsArray = Object.entries(attributeGroups).map(([name, group]) => ({
     attribute: group.attribute,
     options: Array.from(group.options)

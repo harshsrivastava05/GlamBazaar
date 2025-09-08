@@ -8,8 +8,6 @@ import Image from "next/image";
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
 } from "@/app/components/ui/card";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
@@ -25,6 +23,7 @@ import { useToast } from "@/app/components/ui/use-toast";
 import { formatPrice } from "@/lib/utils";
 import { Plus, Search, Edit, Trash2, Eye } from "lucide-react";
 import { UserRole } from "@prisma/client";
+import Error from "next/error";
 
 interface Product {
   id: number;
@@ -124,6 +123,7 @@ export default function AdminProductsPage() {
       const data = await response.json();
       setProducts(data.products || []);
       setTotalPages(data.pagination?.totalPages || 1);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error("Failed to fetch products:", error);
       setError(error.message);
@@ -169,6 +169,7 @@ export default function AdminProductsPage() {
           .catch(() => ({ error: "Delete failed" }));
         throw new Error(errorData.error || "Delete failed");
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error("Delete error:", error);
       toast({
@@ -182,7 +183,7 @@ export default function AdminProductsPage() {
   const toggleProductStatus = async (
     productId: number,
     currentStatus: boolean,
-    productName: string
+    // productName: string
   ) => {
     try {
       const response = await fetch(`/api/admin/products/${productId}`, {
@@ -205,6 +206,7 @@ export default function AdminProductsPage() {
           .catch(() => ({ error: "Update failed" }));
         throw new Error(errorData.error || "Update failed");
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error("Status toggle error:", error);
       toast({
@@ -486,7 +488,7 @@ export default function AdminProductsPage() {
                               toggleProductStatus(
                                 product.id,
                                 product.isActive,
-                                product.name
+                                // product.name
                               )
                             }
                           >

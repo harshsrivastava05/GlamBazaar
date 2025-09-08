@@ -114,6 +114,7 @@ export default function ProductCard({ product, className }: ProductCardProps) {
           variant: "destructive",
         });
       }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       toast({
         title: "Error",

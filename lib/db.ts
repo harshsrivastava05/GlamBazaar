@@ -26,6 +26,7 @@ export async function getProducts(options?: {
   maxPrice?: number;
   brands?: string[];
 }): Promise<Product[]> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const where: any = {
     isActive: true,
     ...(options?.featured && { featured: true }),
@@ -505,6 +506,7 @@ export async function isProductInCart(
 }
 
 // Order functions
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function createOrder(orderData: any) {
   return await prisma.order.create({
     data: orderData,

@@ -1,4 +1,3 @@
-import { Suspense } from 'react'
 import ProductCard from './product-card'
 import { Card, CardContent } from '@/app/components/ui/card'
 import { Product } from '@/lib/types' // Import the correct Product type

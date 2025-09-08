@@ -199,7 +199,7 @@ export default function HomePage() {
               Why Choose GlamBazar?
             </h2>
             <p className="text-base lg:text-lg text-muted-foreground max-w-2xl mx-auto">
-              We're committed to providing the best shopping experience
+              We&apos;re committed to providing the best shopping experience
             </p>
           </div>
           

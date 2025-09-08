@@ -1,38 +1,50 @@
-import { notFound } from 'next/navigation'
-import Image from 'next/image'
-import { Suspense } from 'react'
-import { getProductBySlug, getProducts } from '@/lib/db'
-import { Badge } from '@/app/components/ui/badge'
-import { Button } from '@/app/components/ui/button'
-import ProductGallery from '@/app/components/product/product-gallery'
-import VariantSelector from '@/app/components/product/variant-selector'
-import ProductReviews from '@/app/components/product/product-reviews'
-import RelatedProducts from '@/app/components/product/related-products'
-import AddToCart from '@/app/components/cart/add-to-cart'
-import { formatPrice } from '@/lib/utils'
-import { Star, Heart, Share, ShoppingCart, Truck, Shield, RefreshCw } from 'lucide-react'
+import { notFound } from "next/navigation";
+import { Suspense } from "react";
+import { getProductBySlug, getProducts } from "@/lib/db";
+import { Badge } from "@/app/components/ui/badge";
+import { Button } from "@/app/components/ui/button";
+import ProductGallery from "@/app/components/product/product-gallery";
+import VariantSelector from "@/app/components/product/variant-selector";
+import ProductReviews from "@/app/components/product/product-reviews";
+import RelatedProducts from "@/app/components/product/related-products";
+import AddToCart from "@/app/components/cart/add-to-cart";
+import { formatPrice } from "@/lib/utils";
+import {
+  Star,
+  Heart,
+  Share,
+  ShoppingCart,
+  Truck,
+  Shield,
+  RefreshCw,
+} from "lucide-react";
 
 interface ProductPageProps {
-  params: { slug: string }
+  params: { slug: string };
 }
 
 async function ProductContent({ params }: ProductPageProps) {
-  const product = await getProductBySlug(params.slug)
+  const product = await getProductBySlug(params.slug);
 
   if (!product) {
-    notFound()
+    notFound();
   }
 
-  const averageRating = product.reviews.length > 0 
-    ? product.reviews.reduce((sum, review) => sum + review.rating, 0) / product.reviews.length 
-    : 0
+  const averageRating =
+    product.reviews.length > 0
+      ? product.reviews.reduce((sum, review) => sum + review.rating, 0) /
+        product.reviews.length
+      : 0;
 
-  const totalStock = product.variants.reduce((sum, variant) => sum + variant.stockQuantity, 0)
+  const totalStock = product.variants.reduce(
+    (sum, variant) => sum + variant.stockQuantity,
+    0
+  );
 
   const relatedProducts = await getProducts({
     categoryId: product.categoryId,
     limit: 4,
-  }).then(products => products.filter(p => p.id !== product.id))
+  }).then((products) => products.filter((p) => p.id !== product.id));
 
   return (
     <>
@@ -75,12 +87,14 @@ async function ProductContent({ params }: ProductPageProps) {
                     key={i}
                     className={`h-4 w-4 ${
                       i < Math.floor(averageRating)
-                        ? 'fill-yellow-400 text-yellow-400'
-                        : 'text-gray-300'
+                        ? "fill-yellow-400 text-yellow-400"
+                        : "text-gray-300"
                     }`}
                   />
                 ))}
-                <span className="font-medium ml-1">{averageRating.toFixed(1)}</span>
+                <span className="font-medium ml-1">
+                  {averageRating.toFixed(1)}
+                </span>
               </div>
               <span className="text-sm text-muted-foreground">
                 ({product.reviews.length} reviews)
@@ -104,17 +118,15 @@ async function ProductContent({ params }: ProductPageProps) {
                 {formatPrice(product.basePrice)}
               </span>
             )}
-            {product.featured && (
-              <Badge variant="secondary">Featured</Badge>
-            )}
+            {product.featured && <Badge variant="secondary">Featured</Badge>}
           </div>
 
           {/* Variant Selection */}
           <VariantSelector variants={product.variants} />
 
           {/* Add to Cart */}
-          <AddToCart 
-            productId={product.id} 
+          <AddToCart
+            productId={product.id}
             variants={product.variants}
             disabled={totalStock === 0}
           />
@@ -128,7 +140,7 @@ async function ProductContent({ params }: ProductPageProps) {
             <Button variant="outline" size="icon">
               <Share className="h-4 w-4" />
               <span className="sr-only">Share</span>
-            </Button> 
+            </Button>
           </div>
 
           {/* Features */}
@@ -172,7 +184,7 @@ async function ProductContent({ params }: ProductPageProps) {
       </div>
 
       {/* Reviews */}
-      <ProductReviews reviews={product.reviews} productId={product.id} />
+      <ProductReviews reviews={product.reviews} />
 
       {/* Related Products */}
       {relatedProducts.length > 0 && (
@@ -182,50 +194,53 @@ async function ProductContent({ params }: ProductPageProps) {
         </div>
       )}
     </>
-  )
+  );
 }
 
 export async function generateMetadata({ params }: ProductPageProps) {
-  const product = await getProductBySlug(params.slug)
+  const product = await getProductBySlug(params.slug);
 
   if (!product) {
     return {
-      title: 'Product Not Found - GlamBazar',
-    }
+      title: "Product Not Found - GlamBazar",
+    };
   }
 
   return {
     title: `${product.name} - GlamBazar`,
-    description: product.shortDescription || product.description.substring(0, 160),
+    description:
+      product.shortDescription || product.description.substring(0, 160),
     openGraph: {
       title: product.name,
       description: product.shortDescription || product.description,
-      images: product.images.map(img => ({
+      images: product.images.map((img) => ({
         url: img.url,
         alt: img.altText,
       })),
     },
-  }
+  };
 }
 
 export default function ProductPage({ params }: ProductPageProps) {
   return (
     <div className="container py-8">
-      <Suspense fallback={
-        <div className="grid lg:grid-cols-2 gap-12">
-          <div className="aspect-square bg-muted rounded-lg animate-pulse" />
-          <div className="space-y-4">
-            <div className="h-4 bg-muted rounded animate-pulse w-1/3" />
-            <div className="h-8 bg-muted rounded animate-pulse w-2/3" />
-            <div className="h-4 bg-muted rounded animate-pulse w-1/2" />
-            <div className="h-6 bg-muted rounded animate-pulse w-1/4" />
-            <div className="h-12 bg-muted rounded animate-pulse" />
-            <div className="h-12 bg-muted rounded animate-pulse" />
+      <Suspense
+        fallback={
+          <div className="grid lg:grid-cols-2 gap-12">
+            <div className="aspect-square bg-muted rounded-lg animate-pulse" />
+            <div className="space-y-4">
+              <div className="h-4 bg-muted rounded animate-pulse w-1/3" />
+              <div className="h-8 bg-muted rounded animate-pulse w-2/3" />
+              <div className="h-4 bg-muted rounded animate-pulse w-1/2" />
+              <div className="h-6 bg-muted rounded animate-pulse w-1/4" />
+              <div className="h-12 bg-muted rounded animate-pulse" />
+              <div className="h-12 bg-muted rounded animate-pulse" />
+            </div>
           </div>
-        </div>
-      }>
+        }
+      >
         <ProductContent params={params} />
       </Suspense>
     </div>
-  )
+  );
 }

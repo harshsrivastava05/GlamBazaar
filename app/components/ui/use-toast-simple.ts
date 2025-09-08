@@ -1,7 +1,3 @@
-// Simple toast hook that works without React Context
-// Use this if you don't want to set up the ToastProvider
-
-import { useState } from "react";
 
 export interface Toast {
   id?: string;

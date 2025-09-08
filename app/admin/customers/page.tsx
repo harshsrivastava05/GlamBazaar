@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Card, CardContent } from "@/app/components/ui/card";
 import { Button } from "@/app/components/ui/button";
@@ -13,7 +13,7 @@ import {
 } from "@/app/components/ui/avatar";
 import { useToast } from "@/app/components/ui/use-toast";
 import { formatPrice, formatDate } from "@/lib/utils";
-import { Search, Eye, UserCheck, Users } from "lucide-react";
+import { Search, Eye } from "lucide-react";
 
 interface Customer {
   id: string;
@@ -37,11 +37,7 @@ export default function AdminCustomersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  useEffect(() => {
-    fetchCustomers();
-  }, [currentPage, searchTerm]);
-
-  const fetchCustomers = async () => {
+  const fetchCustomers = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -62,7 +58,8 @@ export default function AdminCustomersPage() {
           variant: "destructive",
         });
       }
-    } catch (error) {
+    } catch (err) {
+      console.error("Failed to fetch customers:", err);
       toast({
         title: "Error",
         description: "Something went wrong",
@@ -71,7 +68,11 @@ export default function AdminCustomersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, searchTerm, toast]);
+
+  useEffect(() => {
+    fetchCustomers();
+  }, [fetchCustomers]);
 
   return (
     <div className="space-y-6">

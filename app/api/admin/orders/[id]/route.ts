@@ -113,7 +113,8 @@ export async function PUT(
 
     const data = await request.json();
     const { status, paymentStatus, trackingNumber } = data;
-
+    
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updateData: any = {};
     if (status) updateData.status = status;
     if (paymentStatus) updateData.paymentStatus = paymentStatus;

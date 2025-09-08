@@ -27,6 +27,7 @@ export default function AdminProductNewPage() {
   const { status, data } = useSession();
   const router = useRouter();
   const { toast } = useToast();
+  console.log(data);
 
   const [name, setName] = useState("");
   const [brand, setBrand] = useState("");

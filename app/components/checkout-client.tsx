@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
 import { Button } from '@/app/components/ui/button'
 import { formatPrice } from '@/lib/utils'
+import Image from 'next/image'
 
 interface CheckoutCartItem {
   id: number
@@ -140,7 +141,7 @@ export default function CheckoutClient({
               <div key={item.id} className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-3">
                   <div className="w-16 h-16 relative">
-                    <img 
+                    <Image
                       src={item.product.images?.[0]?.url || '/placeholder.jpg'} 
                       alt={item.product.images?.[0]?.altText || item.product.name} 
                       className="object-cover w-full h-full rounded" 

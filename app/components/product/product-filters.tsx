@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Check, Filter, X } from "lucide-react";
+import { Filter, X } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import {
   Card,

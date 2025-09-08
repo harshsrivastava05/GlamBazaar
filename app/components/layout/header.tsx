@@ -12,7 +12,6 @@ import {
   X,
   Gem,
   LogOut,
-  Settings,
   Package,
   Heart,
   Shield
@@ -35,7 +34,6 @@ export default function Header() {
   const [isCartLoading, setIsCartLoading] = useState(false)
   const { data: session, status } = useSession()
   const { wishlistCount } = useWishlist()
-  const router = useRouter()
 
   // Check if user is admin or manager
   const isAdmin = session?.user?.role === 'ADMIN' || session?.user?.role === 'MANAGER'
@@ -96,6 +94,7 @@ export default function Header() {
   // Expose updateCartCount globally for other components to use
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (window as any).updateCartCount = updateCartCount
     }
   }, [])

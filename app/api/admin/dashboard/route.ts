@@ -7,7 +7,7 @@ import { prisma } from "@/lib/db";
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
 
-  // @ts-ignore
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   if (
     !session?.user?.id ||
     (session.user.role !== "ADMIN" && session.user.role !== "MANAGER")
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const today = new Date();
-    const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+    // const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
     const thisWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
     const thisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
 
@@ -143,6 +143,7 @@ export async function GET(request: NextRequest) {
           pendingOrders,
         },
       },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       lowStockProducts: (lowStockProducts as any[]).map((item) => ({
         ...item,
         totalStock: Number(item.totalStock),

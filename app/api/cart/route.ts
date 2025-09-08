@@ -5,6 +5,7 @@ import { getCartItems, addToCart, clearCart } from '@/lib/db'
 import { prisma } from '@/lib/db'
 
 // GET /api/cart - Get user's cart items
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -139,6 +140,7 @@ export async function POST(request: NextRequest) {
 }
 
 // DELETE /api/cart - Clear entire cart
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function DELETE(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)

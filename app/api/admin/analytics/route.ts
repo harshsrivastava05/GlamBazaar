@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const period = parseInt(searchParams.get("period") || "30");
-    
+
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - period);
 
@@ -30,20 +30,20 @@ export async function GET(request: NextRequest) {
       topProducts,
       salesChart,
       previousPeriodOrders,
-      previousPeriodRevenue
+      previousPeriodRevenue,
     ] = await Promise.all([
       prisma.order.count({
         where: {
           createdAt: { gte: startDate },
-          status: { not: "CANCELLED" }
-        }
+          status: { not: "CANCELLED" },
+        },
       }),
       prisma.order.aggregate({
         where: {
           createdAt: { gte: startDate },
-          status: { not: "CANCELLED" }
+          status: { not: "CANCELLED" },
         },
-        _sum: { totalAmount: true }
+        _sum: { totalAmount: true },
       }),
       prisma.user.count({ where: { role: "USER" } }),
       prisma.product.count({ where: { isActive: true } }),
@@ -54,17 +54,17 @@ export async function GET(request: NextRequest) {
         orderBy: { createdAt: "desc" },
         include: {
           user: { select: { name: true, email: true } },
-          items: { select: { quantity: true } }
-        }
+          items: { select: { quantity: true } },
+        },
       }),
       prisma.orderItem.groupBy({
         by: ["productId"],
         where: {
-          order: { createdAt: { gte: startDate } }
+          order: { createdAt: { gte: startDate } },
         },
         _sum: { quantity: true, totalPrice: true },
         orderBy: { _sum: { totalPrice: "desc" } },
-        take: 5
+        take: 5,
       }),
       // Sales chart data - group by day
       prisma.$queryRaw`
@@ -80,48 +80,53 @@ export async function GET(request: NextRequest) {
       // Previous period for growth calculation
       prisma.order.count({
         where: {
-          createdAt: { 
+          createdAt: {
             gte: new Date(startDate.getTime() - period * 24 * 60 * 60 * 1000),
-            lt: startDate 
+            lt: startDate,
           },
-          status: { not: "CANCELLED" }
-        }
+          status: { not: "CANCELLED" },
+        },
       }),
       prisma.order.aggregate({
         where: {
-          createdAt: { 
+          createdAt: {
             gte: new Date(startDate.getTime() - period * 24 * 60 * 60 * 1000),
-            lt: startDate 
+            lt: startDate,
           },
-          status: { not: "CANCELLED" }
+          status: { not: "CANCELLED" },
         },
-        _sum: { totalAmount: true }
-      })
+        _sum: { totalAmount: true },
+      }),
     ]);
 
     // Get product details for top products
     const topProductsWithDetails = await Promise.all(
       topProducts.map(async (item) => {
         const product = await prisma.product.findUnique({
-          where: { id: item.productId },
-          select: { name: true, basePrice: true }
+          where: { id: item.productId as number },
+          select: { name: true, basePrice: true },
         });
         return {
           productId: item.productId,
           totalQuantity: item._sum.quantity || 0,
           totalRevenue: Number(item._sum.totalPrice || 0),
-          product: product || { name: "Unknown Product", basePrice: 0 }
+          product: product || { name: "Unknown Product", basePrice: 0 },
         };
       })
     );
 
-    const ordersGrowth = previousPeriodOrders > 0 
-      ? ((totalOrders - previousPeriodOrders) / previousPeriodOrders) * 100 
-      : 0;
-    
-    const revenueGrowth = (previousPeriodRevenue._sum.totalAmount || 0) > 0
-      ? ((Number(totalRevenue._sum.totalAmount || 0) - Number(previousPeriodRevenue._sum.totalAmount || 0)) / Number(previousPeriodRevenue._sum.totalAmount || 0)) * 100
-      : 0;
+    const ordersGrowth =
+      previousPeriodOrders > 0
+        ? ((totalOrders - previousPeriodOrders) / previousPeriodOrders) * 100
+        : 0;
+
+    const revenueGrowth =
+      ((previousPeriodRevenue._sum.totalAmount || 0) as number) > 0
+        ? ((Number(totalRevenue._sum.totalAmount || 0) -
+            Number(previousPeriodRevenue._sum.totalAmount || 0)) /
+            Number(previousPeriodRevenue._sum.totalAmount || 0)) *
+          100
+        : 0;
 
     return NextResponse.json({
       overview: {
@@ -131,21 +136,21 @@ export async function GET(request: NextRequest) {
         totalProducts,
         pendingOrders,
         ordersGrowth,
-        revenueGrowth
+        revenueGrowth,
       },
-      recentOrders: recentOrders.map(order => ({
+      recentOrders: recentOrders.map((order) => ({
         id: order.id,
         orderNumber: order.orderNumber,
         totalAmount: Number(order.totalAmount),
         itemCount: order.items.reduce((sum, item) => sum + item.quantity, 0),
-        user: order.user
+        user: order.user,
       })),
       topProducts: topProductsWithDetails,
-      salesChart: (salesChart as any[]).map(item => ({
+      salesChart: (salesChart as any[]).map((item) => ({
         date: item.date,
         orders: Number(item.orders),
-        revenue: Number(item.revenue)
-      }))
+        revenue: Number(item.revenue),
+      })),
     });
   } catch (error) {
     console.error("Analytics error:", error);

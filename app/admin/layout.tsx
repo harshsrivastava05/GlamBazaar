@@ -6,7 +6,6 @@ import AdminSidebar from '@/app/components/admin/admin-sidebar'
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions)
   if (!session) redirect('/login?callbackUrl=/admin')
-  // @ts-ignore
   const role = session.user?.role
   if (role !== 'ADMIN' && role !== 'MANAGER') redirect('/')
   return (

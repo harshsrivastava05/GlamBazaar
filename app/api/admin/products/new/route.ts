@@ -65,6 +65,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Validate and process images
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const validImages = images.filter((img: any) => img.url && img.url.trim())
 
     // Create product with transaction
@@ -89,6 +90,7 @@ export async function POST(req: NextRequest) {
       // Create images if provided
       if (validImages.length > 0) {
         await tx.productImage.createMany({
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           data: validImages.map((img: any, index: number) => ({
             productId: product.id,
             url: img.url.trim(),
@@ -102,6 +104,7 @@ export async function POST(req: NextRequest) {
       // Create variants
       if (variants.length > 0) {
         // Create custom variants
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const variantData = variants.map((variant: any, index: number) => ({
           productId: product.id,
           sku: variant.sku?.trim().toUpperCase() || `${slug.toUpperCase()}-VAR-${index + 1}`,
@@ -141,7 +144,7 @@ export async function POST(req: NextRequest) {
     })
 
     return NextResponse.json(completeProduct, { status: 201 })
-
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.error('Product creation error:', error)
     

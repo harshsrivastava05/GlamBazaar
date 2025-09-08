@@ -7,7 +7,6 @@ import ProductGrid, {
   ProductGridSkeleton,
 } from "@/app/components/product/product-grid";
 import ProductFilters from "@/app/components/product/product-filters";
-import { Badge } from "@/app/components/ui/badge";
 import { Button } from "@/app/components/ui/button";
 import { Card, CardContent } from "@/app/components/ui/card";
 import {

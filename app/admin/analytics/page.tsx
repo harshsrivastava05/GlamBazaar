@@ -1,68 +1,95 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select'
-import { useToast } from '@/app/components/ui/use-toast'
-import { formatPrice } from '@/lib/utils'
-import { TrendingUp, TrendingDown, DollarSign, ShoppingCart, Users, Package } from 'lucide-react'
+import { useCallback, useEffect, useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/app/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/app/components/ui/select";
+import { useToast } from "@/app/components/ui/use-toast";
+import { formatPrice } from "@/lib/utils";
+import {
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  ShoppingCart,
+  Users,
+  Package,
+} from "lucide-react";
 
 interface AnalyticsData {
   overview: {
-    totalOrders: number
-    totalRevenue: number
-    totalCustomers: number
-    totalProducts: number
-    pendingOrders: number
-    ordersGrowth: number
-    revenueGrowth: number
-  }
+    totalOrders: number;
+    totalRevenue: number;
+    totalCustomers: number;
+    totalProducts: number;
+    pendingOrders: number;
+    ordersGrowth: number;
+    revenueGrowth: number;
+  };
   recentOrders: Array<{
-    id: number
-    orderNumber: string
-    totalAmount: number
-    itemCount: number
-    user: { name: string; email: string }
-  }>
+    id: number;
+    orderNumber: string;
+    totalAmount: number;
+    itemCount: number;
+    user: { name: string; email: string };
+  }>;
   topProducts: Array<{
-    productId: number
-    totalQuantity: number
-    totalRevenue: number
-    product: { name: string; basePrice: number }
-  }>
+    productId: number;
+    totalQuantity: number;
+    totalRevenue: number;
+    product: { name: string; basePrice: number };
+  }>;
   salesChart: Array<{
-    date: string
-    orders: number
-    revenue: number
-  }>
+    date: string;
+    orders: number;
+    revenue: number;
+  }>;
 }
 
 export default function AdminAnalyticsPage() {
-  const { toast } = useToast()
-  const [data, setData] = useState<AnalyticsData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [period, setPeriod] = useState('30')
+  const { toast } = useToast();
+  const [data, setData] = useState<AnalyticsData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [period, setPeriod] = useState("30");
+
+  const fetchAnalytics = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/admin/analytics?period=${period}`);
+      if (response.ok) {
+        const analyticsData = await response.json();
+        setData(analyticsData);
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to fetch analytics",
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
+      console.error("Failed to fetch analytics:", err);
+      toast({
+        title: "Error",
+        description: "Something went wrong",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [period, toast]);
 
   useEffect(() => {
-    fetchAnalytics()
-  }, [period])
-
-  const fetchAnalytics = async () => {
-    setLoading(true)
-    try {
-      const response = await fetch(`/api/admin/analytics?period=${period}`)
-      if (response.ok) {
-        const analyticsData = await response.json()
-        setData(analyticsData)
-      } else {
-        toast({ title: 'Error', description: 'Failed to fetch analytics', variant: 'destructive' })
-      }
-    } catch (error) {
-      toast({ title: 'Error', description: 'Something went wrong', variant: 'destructive' })
-    } finally {
-      setLoading(false)
-    }
-  }
+    fetchAnalytics();
+  }, [fetchAnalytics]);
 
   if (loading) {
     return (
@@ -79,10 +106,10 @@ export default function AdminAnalyticsPage() {
           ))}
         </div>
       </div>
-    )
+    );
   }
 
-  if (!data) return null
+  if (!data) return null;
 
   return (
     <div className="space-y-6">
@@ -90,7 +117,9 @@ export default function AdminAnalyticsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Analytics</h1>
-          <p className="text-muted-foreground">Business insights and performance metrics</p>
+          <p className="text-muted-foreground">
+            Business insights and performance metrics
+          </p>
         </div>
         <Select value={period} onValueChange={setPeriod}>
           <SelectTrigger className="w-40">
@@ -112,14 +141,22 @@ export default function AdminAnalyticsPage() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatPrice(data.overview.totalRevenue)}</div>
+            <div className="text-2xl font-bold">
+              {formatPrice(data.overview.totalRevenue)}
+            </div>
             <div className="flex items-center text-xs text-muted-foreground">
               {data.overview.revenueGrowth >= 0 ? (
                 <TrendingUp className="h-3 w-3 mr-1 text-green-600" />
               ) : (
                 <TrendingDown className="h-3 w-3 mr-1 text-red-600" />
               )}
-              <span className={data.overview.revenueGrowth >= 0 ? 'text-green-600' : 'text-red-600'}>
+              <span
+                className={
+                  data.overview.revenueGrowth >= 0
+                    ? "text-green-600"
+                    : "text-red-600"
+                }
+              >
                 {Math.abs(data.overview.revenueGrowth).toFixed(1)}%
               </span>
               <span className="ml-1">from last period</span>
@@ -133,14 +170,22 @@ export default function AdminAnalyticsPage() {
             <ShoppingCart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{data.overview.totalOrders.toLocaleString()}</div>
+            <div className="text-2xl font-bold">
+              {data.overview.totalOrders.toLocaleString()}
+            </div>
             <div className="flex items-center text-xs text-muted-foreground">
               {data.overview.ordersGrowth >= 0 ? (
                 <TrendingUp className="h-3 w-3 mr-1 text-green-600" />
               ) : (
                 <TrendingDown className="h-3 w-3 mr-1 text-red-600" />
               )}
-              <span className={data.overview.ordersGrowth >= 0 ? 'text-green-600' : 'text-red-600'}>
+              <span
+                className={
+                  data.overview.ordersGrowth >= 0
+                    ? "text-green-600"
+                    : "text-red-600"
+                }
+              >
                 {Math.abs(data.overview.ordersGrowth).toFixed(1)}%
               </span>
               <span className="ml-1">from last period</span>
@@ -154,8 +199,12 @@ export default function AdminAnalyticsPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{data.overview.totalCustomers.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">Total registered users</p>
+            <div className="text-2xl font-bold">
+              {data.overview.totalCustomers.toLocaleString()}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Total registered users
+            </p>
           </CardContent>
         </Card>
 
@@ -165,7 +214,9 @@ export default function AdminAnalyticsPage() {
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{data.overview.totalProducts.toLocaleString()}</div>
+            <div className="text-2xl font-bold">
+              {data.overview.totalProducts.toLocaleString()}
+            </div>
             <p className="text-xs text-muted-foreground">
               {data.overview.pendingOrders} pending orders
             </p>
@@ -182,7 +233,10 @@ export default function AdminAnalyticsPage() {
           <CardContent>
             <div className="space-y-4">
               {data.recentOrders.map((order) => (
-                <div key={order.id} className="flex items-center justify-between">
+                <div
+                  key={order.id}
+                  className="flex items-center justify-between"
+                >
                   <div>
                     <p className="text-sm font-medium">#{order.orderNumber}</p>
                     <p className="text-xs text-muted-foreground">
@@ -190,7 +244,9 @@ export default function AdminAnalyticsPage() {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-medium">{formatPrice(order.totalAmount)}</p>
+                    <p className="text-sm font-medium">
+                      {formatPrice(order.totalAmount)}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -206,7 +262,10 @@ export default function AdminAnalyticsPage() {
           <CardContent>
             <div className="space-y-4">
               {data.topProducts.map((item) => (
-                <div key={item.productId} className="flex items-center justify-between">
+                <div
+                  key={item.productId}
+                  className="flex items-center justify-between"
+                >
                   <div>
                     <p className="text-sm font-medium">{item.product?.name}</p>
                     <p className="text-xs text-muted-foreground">
@@ -214,7 +273,9 @@ export default function AdminAnalyticsPage() {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-medium">{formatPrice(item.totalRevenue)}</p>
+                    <p className="text-sm font-medium">
+                      {formatPrice(item.totalRevenue)}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -223,5 +284,5 @@ export default function AdminAnalyticsPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }
