@@ -126,8 +126,7 @@ export async function getProducts(options?: {
           id: true,
           rating: true,
           title: true,
-          comment: true,
-          verifiedPurchase: true,
+          comment: true, 
           isApproved: true,
           createdAt: true,
           user: {
@@ -168,7 +167,7 @@ export async function getProducts(options?: {
     reviews: product.reviews.map((review) => ({
       ...review,
       title: review.title ?? undefined, // Convert null to undefined
-      comment: review.comment ?? undefined, // Convert null to undefined
+      comment: review.comment ?? undefined, // Changed from 'comment' to 'content'
       createdAt: review.createdAt.toISOString(),
       reviewCount: product.reviews.length, // Add reviewCount based on the fetched reviews
     })),
@@ -241,7 +240,7 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
     reviews: product.reviews.map((review) => ({
       ...review,
       title: review.title ?? undefined, // Convert null to undefined
-      comment: review.comment ?? undefined, // Convert null to undefined
+      comment: review.comment ?? undefined,
       createdAt: review.createdAt.toISOString(),
       // Add reviewCount based on the fetched reviews
     })),
