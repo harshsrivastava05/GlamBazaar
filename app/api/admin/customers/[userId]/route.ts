@@ -5,7 +5,7 @@ import { prisma } from "@/lib/db";
 
 export async function GET(
   _: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   const session = await getServerSession(authOptions);
   
@@ -16,7 +16,7 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const userId = params.userId;
+  const { userId } = await params;
   const customer = await prisma.user.findUnique({
     where: { id: userId },
     select: {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -23,7 +23,6 @@ import { useToast } from "@/app/components/ui/use-toast";
 import { formatPrice } from "@/lib/utils";
 import { Plus, Search, Edit, Trash2, Eye } from "lucide-react";
 import { UserRole } from "@prisma/client";
-import Error from "next/error";
 
 interface Product {
   id: number;
@@ -84,18 +83,7 @@ export default function AdminProductsPage() {
     }
   }, [session, status, router, toast]);
 
-  useEffect(() => {
-    if (
-      status === "authenticated" &&
-      (session?.user?.role === UserRole.ADMIN ||
-        session?.user?.role === UserRole.MANAGER)
-    ) {
-      fetchProducts();
-      fetchCategories();
-    }
-  }, [currentPage, searchTerm, categoryFilter, statusFilter, status, session]);
-
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     if (!session?.user) return;
 
     setLoading(true);
@@ -123,31 +111,42 @@ export default function AdminProductsPage() {
       const data = await response.json();
       setProducts(data.products || []);
       setTotalPages(data.pagination?.totalPages || 1);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
-      console.error("Failed to fetch products:", error);
-      setError(error.message);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Unknown error";
+      console.error("Failed to fetch products:", err);
+      setError(errorMessage);
       toast({
         title: "Error",
-        description: `Failed to fetch products: ${error.message}`,
+        description: `Failed to fetch products: ${errorMessage}`,
         variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, searchTerm, categoryFilter, statusFilter, session?.user, toast]);
 
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     try {
       const response = await fetch("/api/categories");
       if (response.ok) {
         const data = await response.json();
         setCategories(data || []);
       }
-    } catch (error) {
-      console.error("Failed to fetch categories:", error);
+    } catch (err) {
+      console.error("Failed to fetch categories:", err);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (
+      status === "authenticated" &&
+      (session?.user?.role === UserRole.ADMIN ||
+        session?.user?.role === UserRole.MANAGER)
+    ) {
+      fetchProducts();
+      fetchCategories();
+    }
+  }, [fetchProducts, fetchCategories, status, session]);
 
   const handleDelete = async (productId: number, productName: string) => {
     if (!confirm(`Are you sure you want to delete "${productName}"?`)) return;
@@ -169,12 +168,12 @@ export default function AdminProductsPage() {
           .catch(() => ({ error: "Delete failed" }));
         throw new Error(errorData.error || "Delete failed");
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
-      console.error("Delete error:", error);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Delete failed";
+      console.error("Delete error:", err);
       toast({
         title: "Error",
-        description: error.message || "Failed to delete product",
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -183,7 +182,6 @@ export default function AdminProductsPage() {
   const toggleProductStatus = async (
     productId: number,
     currentStatus: boolean,
-    // productName: string
   ) => {
     try {
       const response = await fetch(`/api/admin/products/${productId}`, {
@@ -206,12 +204,12 @@ export default function AdminProductsPage() {
           .catch(() => ({ error: "Update failed" }));
         throw new Error(errorData.error || "Update failed");
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
-      console.error("Status toggle error:", error);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Update failed";
+      console.error("Status toggle error:", err);
       toast({
         title: "Error",
-        description: error.message || "Failed to update product status",
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -488,7 +486,6 @@ export default function AdminProductsPage() {
                               toggleProductStatus(
                                 product.id,
                                 product.isActive,
-                                // product.name
                               )
                             }
                           >

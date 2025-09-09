@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -41,17 +41,7 @@ export default function WishlistPage() {
   const [removingItems, setRemovingItems] = useState<Set<number>>(new Set());
   const [addingToCart, setAddingToCart] = useState<Set<number>>(new Set());
 
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (status === "loading") return;
-    if (!session) {
-      router.push("/login?callbackUrl=/wishlist");
-      return;
-    }
-    fetchWishlistItems();
-  }, [session, status, router]);
-
-  const fetchWishlistItems = async () => {
+  const fetchWishlistItems = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch("/api/wishlist");
@@ -77,7 +67,17 @@ export default function WishlistPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router, toast]);
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (status === "loading") return;
+    if (!session) {
+      router.push("/login?callbackUrl=/wishlist");
+      return;
+    }
+    fetchWishlistItems();
+  }, [session, status, router, fetchWishlistItems]);
 
   const removeFromWishlist = async (productId: number) => {
     setRemovingItems((prev) => new Set(prev).add(productId));

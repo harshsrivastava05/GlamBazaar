@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { UserRole } from "@prisma/client";
 
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit;
 
     const where = {
-      role: "USER",
+      role: UserRole.USER,
       ...(search && {
         OR: [
           { name: { contains: search, mode: "insensitive" as const } },
@@ -87,7 +88,7 @@ export async function GET(request: NextRequest) {
         limit,
         total,
         totalPages: Math.ceil(total / limit),
-        hasMore: offset + limit < total,
+        hasMore: offset + limit < limit,
       },
     });
   } catch (error) {

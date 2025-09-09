@@ -7,7 +7,7 @@ import { prisma } from '@/lib/db'
 // PUT /api/cart/[id] - Update cart item quantity
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -19,7 +19,8 @@ export async function PUT(
       )
     }
 
-    const cartItemId = parseInt(params.id)
+    const { id } = await params
+    const cartItemId = parseInt(id)
     if (isNaN(cartItemId)) {
       return NextResponse.json(
         { error: 'Invalid cart item ID' },
@@ -95,7 +96,7 @@ export async function PUT(
 // DELETE /api/cart/[id] - Remove item from cart
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -107,7 +108,8 @@ export async function DELETE(
       )
     }
 
-    const cartItemId = parseInt(params.id)
+    const { id } = await params
+    const cartItemId = parseInt(id)
     if (isNaN(cartItemId)) {
       return NextResponse.json(
         { error: 'Invalid cart item ID' },

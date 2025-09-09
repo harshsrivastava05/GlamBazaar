@@ -1,9 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useSession, signOut } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
 import {
   Search,
   ShoppingCart,
@@ -38,31 +37,7 @@ export default function Header() {
   // Check if user is admin or manager
   const isAdmin = session?.user?.role === 'ADMIN' || session?.user?.role === 'MANAGER'
 
-  // Fetch cart count on mount and when session changes
-  useEffect(() => {
-    if (session?.user?.id) {
-      fetchCartCount()
-      // Set up periodic refresh for cart count (every 30 seconds)
-      const interval = setInterval(fetchCartCount, 30000)
-      return () => clearInterval(interval)
-    } else {
-      setCartCount(0)
-    }
-  }, [session])
-
-  // Listen for storage events to update cart count across tabs
-  useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'cart-updated' && session?.user?.id) {
-        fetchCartCount()
-      }
-    }
-    
-    window.addEventListener('storage', handleStorageChange)
-    return () => window.removeEventListener('storage', handleStorageChange)
-  }, [session])
-
-  const fetchCartCount = async () => {
+  const fetchCartCount = useCallback(async () => {
     if (!session?.user?.id) return
     
     setIsCartLoading(true)
@@ -82,14 +57,38 @@ export default function Header() {
     } finally {
       setIsCartLoading(false)
     }
-  }
+  }, [session?.user?.id])
+
+  // Fetch cart count on mount and when session changes
+  useEffect(() => {
+    if (session?.user?.id) {
+      fetchCartCount()
+      // Set up periodic refresh for cart count (every 30 seconds)
+      const interval = setInterval(fetchCartCount, 30000)
+      return () => clearInterval(interval)
+    } else {
+      setCartCount(0)
+    }
+  }, [session, fetchCartCount])
+
+  // Listen for storage events to update cart count across tabs
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'cart-updated' && session?.user?.id) {
+        fetchCartCount()
+      }
+    }
+    
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
+  }, [session, fetchCartCount])
 
   // Function to update cart count from external components
-  const updateCartCount = (newCount: number) => {
+  const updateCartCount = useCallback((newCount: number) => {
     setCartCount(newCount)
     // Trigger storage event for other tabs
     localStorage.setItem('cart-updated', Date.now().toString())
-  }
+  }, [])
 
   // Expose updateCartCount globally for other components to use
   useEffect(() => {
@@ -97,7 +96,7 @@ export default function Header() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (window as any).updateCartCount = updateCartCount
     }
-  }, [])
+  }, [updateCartCount])
 
   const navigation = [
     { name: 'Products', href: '/products' },

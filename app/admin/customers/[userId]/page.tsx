@@ -21,20 +21,21 @@ import { formatDate, formatPrice } from "@/lib/utils";
 export default async function AdminCustomerDetailPage({
   params,
 }: {
-  params: { userId: string };
+  params: Promise<{ userId: string }>;
 }) {
   const session = await getServerSession(authOptions);
   if (
     !session?.user?.id ||
     (session.user.role !== "ADMIN" && session.user.role !== "MANAGER")
   ) {
+    const { userId } = await params;
     redirect(
       "/login?callbackUrl=" +
-        encodeURIComponent(`/admin/customers/${params.userId}`)
+        encodeURIComponent(`/admin/customers/${userId}`)
     );
   }
 
-  const userId = params.userId;
+  const { userId } = await params;
   const customer = await prisma.user.findUnique({
     where: { id: userId },
     select: {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
+import { OrderStatus } from '@prisma/client'
 
 // GET /api/reviews - Get reviews with filtering
 export async function GET(request: NextRequest) {
@@ -77,7 +78,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const data = await request.json()
-    const { productId, rating, title, content } = data
+    const { productId, rating, title } = data
 
     // Validate input
     if (!productId || !rating || rating < 1 || rating > 5) {
@@ -93,7 +94,7 @@ export async function POST(request: NextRequest) {
         productId,
         order: {
           userId: session.user.id as string,
-          status: 'DELIVERED'
+          status: OrderStatus.DELIVERED
         }
       }
     })
@@ -127,8 +128,7 @@ export async function POST(request: NextRequest) {
         userId: session.user.id as string,
         productId,
         rating,
-        title: title || '',
-        content: content || '',
+        title: title || null,
         isApproved: true // Auto-approve for now
       },
       include: {

@@ -15,8 +15,6 @@ import {
   DollarSign,
   TrendingUp,
   TrendingDown,
-  Clock,
-  CheckCircle,
 } from "lucide-react";
 
 async function DashboardStats() {

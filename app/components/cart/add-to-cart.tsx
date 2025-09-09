@@ -91,14 +91,14 @@ export default function AddToCart({
         // Trigger cart update (you might want to use a context or state management)
         window.dispatchEvent(new CustomEvent('cartUpdated'))
       } else {
-        const error = await response.json()
+        const errorData = await response.json()
         toast({
           title: "Error",
-          description: error.message || "Failed to add item to cart.",
+          description: errorData.message || "Failed to add item to cart.",
           variant: "destructive",
         })
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Something went wrong. Please try again.",
@@ -138,14 +138,14 @@ export default function AddToCart({
           description: "Item added to your wishlist.",
         })
       } else {
-        const error = await response.json()
+        const errorData = await response.json()
         toast({
           title: "Error",
-          description: error.message || "Failed to add item to wishlist.",
+          description: errorData.message || "Failed to add item to wishlist.",
           variant: "destructive",
         })
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Something went wrong. Please try again.",

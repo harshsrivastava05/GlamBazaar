@@ -1,13 +1,18 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
+interface LowStockProduct {
+  id: number;
+  name: string;
+  totalStock: number;
+}
+
 // GET /api/admin/dashboard - Get dashboard overview
-export async function GET(request: NextRequest) {
+export async function GET() {
   const session = await getServerSession(authOptions);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   if (
     !session?.user?.id ||
     (session.user.role !== "ADMIN" && session.user.role !== "MANAGER")
@@ -17,7 +22,6 @@ export async function GET(request: NextRequest) {
 
   try {
     const today = new Date();
-    // const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
     const thisWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
     const thisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
 
@@ -101,7 +105,7 @@ export async function GET(request: NextRequest) {
       }),
 
       // Low stock products
-      prisma.$queryRaw`
+      prisma.$queryRaw<LowStockProduct[]>`
         SELECT p.id, p.name, SUM(pv.stockQuantity) as totalStock
         FROM products p
         JOIN product_variants pv ON pv.productId = p.id
@@ -143,8 +147,7 @@ export async function GET(request: NextRequest) {
           pendingOrders,
         },
       },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      lowStockProducts: (lowStockProducts as any[]).map((item) => ({
+      lowStockProducts: lowStockProducts.map((item) => ({
         ...item,
         totalStock: Number(item.totalStock),
       })),

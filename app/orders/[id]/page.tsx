@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -106,13 +106,7 @@ export default function OrderDetailsPage() {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (params.id) {
-      fetchOrder();
-    }
-  }, [params.id]);
-
-  const fetchOrder = async () => {
+  const fetchOrder = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch(`/api/orders/${params.id}`);
@@ -143,7 +137,13 @@ export default function OrderDetailsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [params.id, toast, router]);
+
+  useEffect(() => {
+    if (params.id) {
+      fetchOrder();
+    }
+  }, [params.id, fetchOrder]);
 
   if (loading) {
     return (

@@ -3,6 +3,12 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
+interface SalesChartData {
+  date: Date;
+  orders: number;
+  revenue: number;
+}
+
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
 
@@ -67,7 +73,7 @@ export async function GET(request: NextRequest) {
         take: 5,
       }),
       // Sales chart data - group by day
-      prisma.$queryRaw`
+      prisma.$queryRaw<SalesChartData[]>`
         SELECT 
           DATE(createdAt) as date,
           COUNT(*) as orders,
@@ -146,7 +152,7 @@ export async function GET(request: NextRequest) {
         user: order.user,
       })),
       topProducts: topProductsWithDetails,
-      salesChart: (salesChart as any[]).map((item) => ({
+      salesChart: salesChart.map((item) => ({
         date: item.date,
         orders: Number(item.orders),
         revenue: Number(item.revenue),

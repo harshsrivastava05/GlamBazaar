@@ -10,18 +10,19 @@ import { formatDate, formatPrice } from '@/lib/utils'
 import { ArrowLeft } from 'lucide-react'
 
 interface OrderDetailPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 export default async function OrderDetailPage({ params }: OrderDetailPageProps) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) redirect('/login?callbackUrl=/orders')
 
+  const { id } = await params
   const order = await prisma.order.findUnique({
     where: { 
-      id: parseInt(params.id),
+      id: parseInt(id),
       userId: session.user.id as string // Ensure user can only access their orders
     },
     include: {

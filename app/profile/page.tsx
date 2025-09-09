@@ -12,13 +12,23 @@ import {
 import { Button } from "@/app/components/ui/button";
 import { formatPrice, formatDate } from "@/lib/utils";
 
+interface UserSession {
+  user: {
+    id: string;
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+    role?: string;
+  };
+}
+
 export default async function ProfilePage() {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(authOptions) as UserSession | null;
   if (!session?.user?.id) redirect("/login?callbackUrl=/profile");
 
   const [user, orders, addresses] = await Promise.all([
     prisma.user.findUnique({
-      where: { id: session.user.id as string },
+      where: { id: session.user.id },
       select: {
         id: true,
         name: true,
@@ -30,7 +40,7 @@ export default async function ProfilePage() {
       },
     }),
     prisma.order.findMany({
-      where: { userId: session.user.id as string },
+      where: { userId: session.user.id },
       orderBy: { createdAt: "desc" },
       take: 5,
       select: {
@@ -43,7 +53,7 @@ export default async function ProfilePage() {
       },
     }),
     prisma.address.findMany({
-      where: { userId: session.user.id as string },
+      where: { userId: session.user.id },
       orderBy: [{ isDefault: "desc" }, { updatedAt: "desc" }],
       select: {
         id: true,
@@ -60,6 +70,8 @@ export default async function ProfilePage() {
     }),
   ]);
 
+  const isAdminOrManager = user?.role === "ADMIN" || user?.role === "MANAGER";
+
   return (
     <div className="container py-8 space-y-8">
       <div className="flex items-center justify-between">
@@ -70,15 +82,11 @@ export default async function ProfilePage() {
           </p>
         </div>
 
-        {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (session.user as any).role === "ADMIN" ||
-          (session.user as any).role === "MANAGER" ? (
-            <Button asChild>
-              <Link href="/admin">Go to Admin</Link>
-            </Button>
-          ) : null
-        }
+        {isAdminOrManager && (
+          <Button asChild>
+            <Link href="/admin">Go to Admin</Link>
+          </Button>
+        )}
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
@@ -106,7 +114,7 @@ export default async function ProfilePage() {
                   Member since
                 </div>
                 <div className="font-medium">
-                  {formatDate(user?.createdAt!)}
+                  {user?.createdAt ? formatDate(user.createdAt) : "—"}
                 </div>
               </div>
             </div>
