@@ -145,6 +145,8 @@ export default function CheckoutClient({
                       src={item.product.images?.[0]?.url || '/placeholder.jpg'} 
                       alt={item.product.images?.[0]?.altText || item.product.name} 
                       className="object-cover w-full h-full rounded" 
+                      width={200}
+                      height={200}
                     />
                   </div>
                   <div>
