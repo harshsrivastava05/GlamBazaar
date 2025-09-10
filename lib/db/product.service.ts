@@ -114,7 +114,7 @@ export async function getProducts(options?: {
           id: true,
           rating: true,
           title: true,
-          content: true,
+          // content: true,
           isApproved: true,
           createdAt: true,
           user: {
@@ -155,8 +155,8 @@ export async function getProducts(options?: {
     reviews: product.reviews.map((review) => ({
       ...review,
       title: review.title ?? undefined,
-      content: review.content ?? undefined,
-      comment: review.content ?? undefined, // Backward compatibility
+      // content: review.content ?? undefined,
+      // comment: review.content ?? undefined, // Backward compatibility
       createdAt: review.createdAt.toISOString(),
     })),
   }));
@@ -228,8 +228,8 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
     reviews: product.reviews.map((review) => ({
       ...review,
       title: review.title ?? undefined,
-      content: review.content ?? undefined,
-      comment: review.content ?? undefined, // Backward compatibility
+      // content: review.content ?? undefined,
+      // comment: review.content ?? undefined, // Backward compatibility
       createdAt: review.createdAt.toISOString(),
     })),
   };
