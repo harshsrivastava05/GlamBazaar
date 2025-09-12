@@ -10,7 +10,7 @@
     "seed:jewelry-cosmetics": "node seed-jewelry-cosmetics.js",
     "db:setup": "prisma generate && prisma db push",
     "db:migrate": "prisma migrate dev",
-    "db:seed": "node seed-jewelry-cosmetics.js",
+    "db:seed": "npx tsc seed-jewelry-cosmetics.ts && node seed-jewelry-cosmetics.js",
     "db:reset": "prisma migrate reset && npm run db:seed"
   },
   "dependencies": {

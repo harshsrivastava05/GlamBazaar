@@ -1,3 +1,5 @@
+import { Decimal } from "@prisma/client/runtime/library";
+
 export interface Product {
   id: number;
   name: string;
@@ -11,7 +13,7 @@ export interface Product {
   featured: boolean;
   isActive: boolean;
   tags?: string | null;
-  averageRating?: number; // Added field
+  averageRating?: Decimal; // Added field
   reviewCount: number; // Added field
   createdAt: string; // Always ISO string after transformation
   updatedAt: string; // Always ISO string after transformation

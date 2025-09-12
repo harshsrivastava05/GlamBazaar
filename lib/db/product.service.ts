@@ -156,7 +156,7 @@ export async function getProducts(options?: {
       ...review,
       title: review.title ?? undefined,
       // content: review.content ?? undefined,
-      // comment: review.content ?? undefined, // Backward compatibility
+      // comment: review.comment ?? undefined, // Backward compatibility
       createdAt: review.createdAt.toISOString(),
     })),
   }));
