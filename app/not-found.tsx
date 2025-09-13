@@ -18,7 +18,7 @@ export default function NotFound() {
                 Page Not Found
               </h1>
               <p className="text-muted-foreground text-base lg:text-lg max-w-md mx-auto">
-                Sorry, we couldn't find the page you're looking for. The page
+                Sorry, we couldn&apps;t find the page you&apps;re looking for. The page
                 might have been moved, deleted, or the URL might be incorrect.
               </p>
             </div>
