@@ -1,35 +1,11 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "images.unsplash.com",
-        port: "",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "source.unsplash.com",
-        port: "",
-        pathname: "/**",
-      },
-      {
-        protocol: "http",
-        hostname: "localhost",
-        port: "",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "localhost",
-        port: "",
-        pathname: "/**",
-      },
-    ],
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  experimental: {
+    serverComponentsExternalPackages: ['@prisma/client', 'prisma']
   },
-  serverExternalPackages: ["@prisma/client", "bcryptjs"],
-};
+  images: {
+    domains: ['images.unsplash.com']
+  }
+}
 
-export default nextConfig;
+module.exports = nextConfig

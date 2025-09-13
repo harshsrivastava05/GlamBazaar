@@ -1,9 +1,15 @@
-import Link from "next/link";
-import { Button } from "./components/ui/button";
-import { Card, CardContent } from "./components/ui/card";
-import { Home, Search, Gem, ArrowLeft } from "lucide-react";
+import Link from 'next/link'
+import { Button } from './components/ui/button'
+import { Card, CardContent } from './components/ui/card'
+import { Home, Search, Gem, ArrowLeft } from 'lucide-react'
 
 export default function NotFound() {
+  const handleGoBack = () => {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      window.history.back();
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-primary/5 via-background to-primary/5">
       <div className="container max-w-2xl">
@@ -18,8 +24,7 @@ export default function NotFound() {
                 Page Not Found
               </h1>
               <p className="text-muted-foreground text-base lg:text-lg max-w-md mx-auto">
-                Sorry, we couldn&apps;t find the page you&apps;re looking for. The page
-                might have been moved, deleted, or the URL might be incorrect.
+                Sorry, we couldn&apos;t find the page you&apos;re looking for. The page might have been moved, deleted, or the URL might be incorrect.
               </p>
             </div>
 
@@ -52,20 +57,24 @@ export default function NotFound() {
                   </Link>
                 </Button>
                 <Button variant="ghost" size="sm" asChild>
-                  <Link href="/category/cosmetics">Cosmetics</Link>
+                  <Link href="/category/cosmetics">
+                    Cosmetics
+                  </Link>
                 </Button>
                 <Button variant="ghost" size="sm" asChild>
-                  <Link href="/products">All Products</Link>
+                  <Link href="/products">
+                    All Products
+                  </Link>
                 </Button>
               </div>
             </div>
 
             {/* Back Button */}
             <div className="pt-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => window.history.back()}
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleGoBack}
                 className="text-muted-foreground hover:text-foreground"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
@@ -76,5 +85,5 @@ export default function NotFound() {
         </Card>
       </div>
     </div>
-  );
+  )
 }

@@ -4,14 +4,15 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
     "seed:jewelry-cosmetics": "node seed-jewelry-cosmetics.js",
     "db:setup": "prisma generate && prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:seed": "npx tsc seed-jewelry-cosmetics.ts && node seed-jewelry-cosmetics.js",
-    "db:reset": "prisma migrate reset && npm run db:seed"
+    "db:reset": "prisma migrate reset && npm run db:seed",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@faker-js/faker": "^10.0.0",
