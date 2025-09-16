@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -23,7 +23,7 @@ model Account {
   user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
-  @@index([userId], map: "accounts_userId_fkey")
+  @@index([userId], map: "account_userId_fkey")
   @@map("accounts")
 }
 
@@ -34,7 +34,7 @@ model Session {
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId], map: "sessions_userId_fkey")
+  @@index([userId], map: "session_userId_fkey")
   @@map("sessions")
 }
 
@@ -83,7 +83,7 @@ model Category {
   children    Category[] @relation("CategoryParent")
   products    Product[]
 
-  @@index([parentId], map: "categories_parentId_fkey")
+  @@index([parentId], map: "category_parentId_fkey")
   @@map("categories")
 }
 
@@ -118,7 +118,7 @@ model Product {
   reviews          Review[]
   wishlistItems    WishlistItem[]
 
-  @@index([categoryId], map: "products_categoryId_fkey")
+  @@index([categoryId], map: "product_categoryId_fkey")
   @@map("products")
 }
 
@@ -132,7 +132,7 @@ model ProductImage {
   createdAt DateTime @default(now())
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  @@index([productId], map: "product_images_productId_fkey")
+  @@index([productId], map: "productimage_productId_fkey")
   @@map("product_images")
 }
 
@@ -158,7 +158,7 @@ model AttributeOption {
   attribute         Attribute          @relation(fields: [attributeId], references: [id], onDelete: Cascade)
   variantAttributes VariantAttribute[]
 
-  @@index([attributeId], map: "attribute_options_attributeId_fkey")
+  @@index([attributeId], map: "attributeoption_attributeId_fkey")
   @@map("attribute_options")
 }
 
@@ -179,7 +179,7 @@ model ProductVariant {
   product           Product            @relation(fields: [productId], references: [id], onDelete: Cascade)
   variantAttributes VariantAttribute[]
 
-  @@index([productId], map: "product_variants_productId_fkey")
+  @@index([productId], map: "productvariant_productId_fkey")
   @@map("product_variants")
 }
 
@@ -193,8 +193,8 @@ model VariantAttribute {
   variant           ProductVariant  @relation(fields: [variantId], references: [id], onDelete: Cascade)
 
   @@unique([variantId, attributeId])
-  @@index([attributeId], map: "variant_attributes_attributeId_fkey")
-  @@index([attributeOptionId], map: "variant_attributes_attributeOptionId_fkey")
+  @@index([attributeId], map: "variantattribute_attributeId_fkey")
+  @@index([attributeOptionId], map: "variantattribute_attributeOptionId_fkey")
   @@map("variant_attributes")
 }
 
@@ -216,7 +216,7 @@ model Address {
   user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   orders       Order[]
 
-  @@index([userId], map: "addresses_userId_fkey")
+  @@index([userId], map: "address_userId_fkey")
   @@map("addresses")
 }
 
@@ -233,8 +233,8 @@ model CartItem {
   variant   ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
 
   @@unique([userId, productId, variantId])
-  @@index([productId], map: "cart_items_productId_fkey")
-  @@index([variantId], map: "cart_items_variantId_fkey")
+  @@index([productId], map: "cartitem_productId_fkey")
+  @@index([variantId], map: "cartitem_variantId_fkey")
   @@map("cart_items")
 }
 
@@ -271,8 +271,8 @@ model Order {
   user                  User                 @relation(fields: [userId], references: [id])
   transactions          PaymentTransaction[]
 
-  @@index([addressId], map: "orders_addressId_fkey")
-  @@index([userId], map: "orders_userId_fkey")
+  @@index([addressId], map: "order_addressId_fkey")
+  @@index([userId], map: "order_userId_fkey")
   @@map("orders")
 }
 
@@ -289,9 +289,9 @@ model OrderItem {
   product    Product?        @relation(fields: [productId], references: [id])
   variant    ProductVariant? @relation(fields: [variantId], references: [id])
 
-  @@index([orderId], map: "order_items_orderId_fkey")
-  @@index([productId], map: "order_items_productId_fkey")
-  @@index([variantId], map: "order_items_variantId_fkey")
+  @@index([orderId], map: "orderitem_orderId_fkey")
+  @@index([productId], map: "orderitem_productId_fkey")
+  @@index([variantId], map: "orderitem_variantId_fkey")
   @@map("order_items")
 }
 
@@ -308,7 +308,7 @@ model PaymentTransaction {
   updatedAt       DateTime       @updatedAt
   order           Order          @relation(fields: [orderId], references: [id])
 
-  @@index([orderId], map: "payment_transactions_orderId_fkey")
+  @@index([orderId], map: "paymenttransaction_orderId_fkey")
   @@map("payment_transactions")
 }
 
@@ -327,7 +327,7 @@ model Review {
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, productId])
-  @@index([productId], map: "reviews_productId_fkey")
+  @@index([productId], map: "review_productId_fkey")
   @@map("reviews")
 }
 
@@ -340,7 +340,7 @@ model WishlistItem {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, productId])
-  @@index([productId], map: "wishlist_items_productId_fkey")
+  @@index([productId], map: "wishlistitem_productId_fkey")
   @@map("wishlist_items")
 }
 
