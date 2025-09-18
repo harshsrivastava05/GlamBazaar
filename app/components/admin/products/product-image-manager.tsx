@@ -24,6 +24,7 @@ import {
   MoveDown,
 } from "lucide-react"
 import { toast } from "sonner"
+import Image from "next/image"
 
 interface ProductImage {
   id: number
@@ -249,7 +250,7 @@ export function ProductImageManager({ productId, images: initialImages }: Produc
               className="group relative border rounded-lg overflow-hidden bg-muted/30"
             >
               <div className="aspect-square relative">
-                <img
+                <Image
                   src={image.url}
                   alt={image.altText || `Product image ${index + 1}`}
                   className="w-full h-full object-cover"
