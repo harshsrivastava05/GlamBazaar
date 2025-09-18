@@ -1,3 +1,9 @@
+## Admin Access
+Additional test admin account for staging/testing:
+
+Email: testadmin@gmail.com
+
+Password: test1234
 # 💎 GlamBazaar - Premium E-commerce Platform
 
 <div align="center">
@@ -33,6 +39,8 @@ GlamBazaar is a premium e-commerce platform built with the latest web technologi
 - ⚡ **Modern Tech Stack** - NextJS 15, TypeScript, Tailwind CSS v4.1
 
 ---
+
+
 
 ## 🏗️ Architecture
 
