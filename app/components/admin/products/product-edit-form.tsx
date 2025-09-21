@@ -19,6 +19,7 @@ import { ProductImageManager } from "./product-image-manager"
 import { ProductVariantsManager } from "./product-variants-manager"
 import { Save, ArrowLeft, Loader2 } from "lucide-react"
 import { toast } from "sonner"
+import { ProductImage, ProductVariant } from "@/lib/types"
 
 interface Category {
   id: number
@@ -41,8 +42,8 @@ interface Product {
   metaTitle: string | null
   metaDescription: string | null
   category: Category
-  images: any[]
-  variants: any[]
+  images: ProductImage[]
+  variants: ProductVariant[]
   reviewCount: number
   totalStock: number
   createdAt: string
@@ -54,10 +55,33 @@ interface ProductEditFormProps {
   categories: Category[]
 }
 
+type TabType = "basic" | "images" | "variants" | "seo";
+
+interface FormData {
+  name: string
+  description: string
+  shortDescription: string
+  categoryId: string
+  brand: string
+  basePrice: string
+  salePrice: string
+  featured: boolean
+  isActive: boolean
+  tags: string
+  metaTitle: string
+  metaDescription: string
+}
+
+interface TabDefinition {
+  id: TabType
+  label: string
+  description: string
+}
+
 export function ProductEditForm({ product, categories }: ProductEditFormProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     name: product.name,
     description: product.description || "",
     shortDescription: product.shortDescription || "",
@@ -72,13 +96,13 @@ export function ProductEditForm({ product, categories }: ProductEditFormProps) {
     metaDescription: product.metaDescription || "",
   })
 
-  const [activeTab, setActiveTab] = useState<"basic" | "images" | "variants" | "seo">("basic")
+  const [activeTab, setActiveTab] = useState<TabType>("basic")
 
-  const handleInputChange = (field: string, value: string | boolean | number) => {
+  const handleInputChange = (field: keyof FormData, value: string | boolean | number) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     
     if (!formData.name.trim()) {
@@ -136,12 +160,16 @@ export function ProductEditForm({ product, categories }: ProductEditFormProps) {
     }
   }
 
-  const tabs = [
+  const tabs: TabDefinition[] = [
     { id: "basic", label: "Basic Info", description: "Name, description, pricing" },
     { id: "images", label: "Images", description: `${product.images.length} images` },
     { id: "variants", label: "Variants", description: `${product.variants.length} variants` },
     { id: "seo", label: "SEO", description: "Meta title and description" },
   ]
+
+  const handleTabClick = (tabId: TabType) => {
+    setActiveTab(tabId)
+  }
 
   return (
     <div className="space-y-6">
@@ -199,7 +227,7 @@ export function ProductEditForm({ product, categories }: ProductEditFormProps) {
             <button
               key={tab.id}
               type="button"
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => handleTabClick(tab.id)}
               className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
                 activeTab === tab.id
                   ? "border-primary text-primary"
