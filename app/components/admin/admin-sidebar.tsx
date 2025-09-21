@@ -1,78 +1,31 @@
-"use client";
+// app/components/admin/admin-sidebar.tsx
+"use client"
 
-import { usePathname } from "next/navigation";
-import Link from "next/link";
-import { useSession, signOut } from "next-auth/react";
-import {
-  LayoutDashboard,
-  Package,
-  ShoppingCart,
-  Users,
-  BarChart3,
-  Settings,
-  LogOut,
-  Gem,
-} from "lucide-react";
-import { Button } from "@/app/components/ui/button";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/app/components/ui/avatar";
-import { cn } from "@/lib/utils";
+import { usePathname } from "next/navigation"
+import Link from "next/link"
+import { useSession, signOut } from "next-auth/react"
+import { LogOut } from "lucide-react"
+import { Button } from "@/app/components/ui/button"
+import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar"
+import { navigationItems } from './navigation-config'
+import { AdminLogo } from './admin-logo'
+import { cn } from "@/lib/utils"
 
-const navigation = [
-  {
-    name: "Dashboard",
-    href: "/admin",
-    icon: LayoutDashboard,
-  },
-  {
-    name: "Products",
-    href: "/admin/products",
-    icon: Package,
-  },
-  {
-    name: "Orders",
-    href: "/admin/orders",
-    icon: ShoppingCart,
-  },
-  {
-    name: "Customers",
-    href: "/admin/customers",
-    icon: Users,
-  },
-  {
-    name: "Analytics",
-    href: "/admin/analytics",
-    icon: BarChart3,
-  },
-  {
-    name: "Settings",
-    href: "/admin/settings",
-    icon: Settings,
-  },
-];
-
-export default function AdminSidebar() {
-  const pathname = usePathname();
-  const { data: session } = useSession();
+export function AdminSidebar() {
+  const pathname = usePathname()
+  const { data: session } = useSession()
 
   return (
     <div className="flex flex-col w-64 bg-background border-r">
       {/* Header */}
       <div className="p-6 border-b">
-        <Link href="/" className="flex items-center space-x-2">
-          <Gem className="h-6 w-6 text-primary" />
-          <span className="text-xl font-bold">GlamBazar</span>
-        </Link>
-        <p className="text-sm text-muted-foreground mt-1">Admin Dashboard</p>
+        <AdminLogo />
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-2">
-        {navigation.map((item) => {
-          const isActive = pathname === item.href;
+      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+        {navigationItems.map((item) => {
+          const isActive = pathname === item.href
           return (
             <Link
               key={item.name}
@@ -87,7 +40,7 @@ export default function AdminSidebar() {
               <item.icon className="h-4 w-4" />
               <span>{item.name}</span>
             </Link>
-          );
+          )
         })}
       </nav>
 
@@ -120,5 +73,5 @@ export default function AdminSidebar() {
         </Button>
       </div>
     </div>
-  );
+  )
 }

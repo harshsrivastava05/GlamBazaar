@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://glambazar.com",
+    url: "https://glam-bazaar.vercel.app/",
     title: "GlamBazar - Jewelry & Cosmetics",
     description: "Premium jewelry and cosmetics e-commerce platform",
     siteName: "GlamBazar",
